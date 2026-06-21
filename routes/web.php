@@ -9,3 +9,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+//Hello World
+Route::get('/hello-world', function () {
+    return 'Hello World';
+});
