@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('image');
             $table->string('link')->nullable();
-            $table->string('cta_label', 100)->nullable();
             $table->unsignedInteger('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
