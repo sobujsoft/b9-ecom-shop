@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useShopCart } from '@/composables/shop/useShopCart';
 import { useShopUi } from '@/composables/shop/useShopUi';
 import { useShopWishlist } from '@/composables/shop/useShopWishlist';
@@ -14,9 +14,13 @@ const { product } = defineProps<{
 
 const { addToCart } = useShopCart();
 const { showToast } = useShopUi();
-const { toggleWish } = useShopWishlist();
+const { toggleWish, isWishlisted: checkWishlisted } = useShopWishlist();
 
 const isWishlisted = ref(false);
+
+onMounted(() => {
+    isWishlisted.value = checkWishlisted(product.name);
+});
 
 const imgUrl = `https://images.unsplash.com/${product.img}?auto=format&fit=crop&w=600&q=70`;
 const fullStars = Math.floor(product.rating);
@@ -24,18 +28,30 @@ const fullStars = Math.floor(product.rating);
 function handleToggleWish(): void {
     isWishlisted.value = toggleWish(
         isWishlisted.value,
-        product.name,
+        product,
         showToast,
     );
 }
 
 function handleAddToCart(): void {
-    addToCart(product.name, product.price, product.img);
+    addToCart(
+        product.name,
+        product.price,
+        product.img,
+        1,
+        product.slug,
+    );
     showToast('Added to cart');
 }
 
 function handleBuyNow(): void {
-    addToCart(product.name, product.price, product.img);
+    addToCart(
+        product.name,
+        product.price,
+        product.img,
+        1,
+        product.slug,
+    );
 }
 </script>
 

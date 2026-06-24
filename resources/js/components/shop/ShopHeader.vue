@@ -11,12 +11,15 @@ import shop from '@/routes/shop';
 
 const page = usePage();
 const { openMobileMenu } = useShopUi();
-const { cartQty, openCart } = useShopCart();
+const { cartQty } = useShopCart();
 const { wishCount } = useShopWishlist();
 const { search, setSearch } = useShopCatalog();
 
 const isShopPage = computed(() => page.component === 'shop/Shop');
 const isHomePage = computed(() => page.component === 'shop/Home');
+const isCartPage = computed(() => page.component === 'shop/Cart');
+const isWishlistPage = computed(() => page.component === 'shop/Wishlist');
+const isCheckoutPage = computed(() => page.component === 'shop/Checkout');
 const showMobileSearch = ref(false);
 
 function toggleMobileSearch(): void {
@@ -178,10 +181,15 @@ function handleSearchInput(event: Event): void {
                             />
                         </svg>
                     </a>
-                    <button
-                        type="button"
+                    <Link
+                        :href="shop.wishlist()"
                         :aria-label="`Wishlist, ${wishCount} items`"
-                        class="relative inline-flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
+                        class="relative inline-flex h-11 w-11 items-center justify-center rounded-lg focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
+                        :class="
+                            isWishlistPage
+                                ? 'bg-red-50 text-red-600'
+                                : 'text-gray-700 hover:bg-gray-100'
+                        "
                     >
                         <svg
                             class="h-6 w-6"
@@ -201,12 +209,16 @@ function handleSearchInput(event: Event): void {
                         >
                             {{ wishCount }}
                         </span>
-                    </button>
-                    <button
-                        type="button"
+                    </Link>
+                    <Link
+                        :href="shop.cart()"
                         :aria-label="`Cart, ${cartQty} items`"
-                        class="relative inline-flex h-11 w-11 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
-                        @click="openCart"
+                        class="relative inline-flex h-11 w-11 items-center justify-center rounded-lg focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
+                        :class="
+                            isCartPage || isCheckoutPage
+                                ? 'bg-shop-primary-50 text-shop-primary-600'
+                                : 'text-gray-700 hover:bg-gray-100'
+                        "
                     >
                         <svg
                             class="h-6 w-6"
@@ -226,7 +238,7 @@ function handleSearchInput(event: Event): void {
                         >
                             {{ cartQty }}
                         </span>
-                    </button>
+                    </Link>
                 </div>
             </div>
 

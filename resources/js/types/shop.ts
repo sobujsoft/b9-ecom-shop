@@ -68,7 +68,10 @@ export type ShopCarouselSlide = {
 
 export type ShopCartItem = {
     name: string;
+    slug?: string;
     price: number;
     img: string;
     qty: number;
 };
+
+export type ShopWishlistItem = ShopProduct;

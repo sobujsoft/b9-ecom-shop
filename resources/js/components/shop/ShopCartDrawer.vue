@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { useShopCart } from '@/composables/shop/useShopCart';
 import { formatTaka } from '@/lib/shop/currency';
+import shop from '@/routes/shop';
 
 const {
     cart,
@@ -210,15 +212,17 @@ const {
                         Delivery calculated at checkout.
                     </p>
                     <div class="grid grid-cols-2 gap-3">
-                        <a
-                            href="#"
+                        <Link
+                            :href="shop.cart()"
                             class="rounded-lg border border-gray-300 px-4 py-2.5 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                            >View Cart</a
+                            @click="closeCart"
+                            >View Cart</Link
                         >
-                        <a
-                            href="#"
+                        <Link
+                            :href="shop.checkout()"
                             class="rounded-lg bg-shop-primary-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-shop-primary-700"
-                            >Checkout</a
+                            @click="closeCart"
+                            >Checkout</Link
                         >
                     </div>
                 </div>

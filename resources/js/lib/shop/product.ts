@@ -8,7 +8,10 @@ export function productSlug(name: string): string {
         .replace(/^-|-$/g, '');
 }
 
-export function productShowUrl(product: ShopProduct): string {
+export function productShowUrl(product: {
+    name: string;
+    slug?: string;
+}): string {
     return `/products/${product.slug ?? productSlug(product.name)}`;
 }
 

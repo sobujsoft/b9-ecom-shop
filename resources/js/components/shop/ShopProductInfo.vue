@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import ShopStarRating from '@/components/shop/ShopStarRating.vue';
 import { useShopCart } from '@/composables/shop/useShopCart';
 import { useShopUi } from '@/composables/shop/useShopUi';
@@ -16,9 +16,13 @@ const quantity = defineModel<number>('quantity', { default: 1 });
 
 const { addToCart } = useShopCart();
 const { showToast } = useShopUi();
-const { toggleWish } = useShopWishlist();
+const { toggleWish, isWishlisted: checkWishlisted } = useShopWishlist();
 
 const isWishlisted = ref(false);
+
+onMounted(() => {
+    isWishlisted.value = checkWishlisted(product.name);
+});
 
 function clampQuantity(): void {
     quantity.value = Math.max(1, Number(quantity.value) || 1);
@@ -41,18 +45,30 @@ function handleQuantityInput(event: Event): void {
 function handleToggleWish(): void {
     isWishlisted.value = toggleWish(
         isWishlisted.value,
-        product.name,
+        product,
         showToast,
     );
 }
 
 function handleAddToCart(): void {
-    addToCart(product.name, product.price, product.img, quantity.value);
+    addToCart(
+        product.name,
+        product.price,
+        product.img,
+        quantity.value,
+        product.slug,
+    );
     showToast('Added to cart');
 }
 
 function handleBuyNow(): void {
-    addToCart(product.name, product.price, product.img, quantity.value);
+    addToCart(
+        product.name,
+        product.price,
+        product.img,
+        quantity.value,
+        product.slug,
+    );
 }
 
 function goToReviews(): void {
