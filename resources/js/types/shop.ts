@@ -1,5 +1,6 @@
 export type ShopProduct = {
     name: string;
+    slug?: string;
     price: number;
     oldPrice?: number;
     img: string;
@@ -7,6 +8,36 @@ export type ShopProduct = {
     reviews: number;
     inStock: boolean;
     tag?: string;
+};
+
+export type ShopProductImage = {
+    full: string;
+    thumb: string;
+};
+
+export type ShopRatingBreakdown = {
+    stars: number;
+    percent: number;
+};
+
+export type ShopReview = {
+    name: string;
+    rating: number;
+    date: string;
+    verified: boolean;
+    text: string;
+};
+
+export type ShopProductDetail = ShopProduct & {
+    slug: string;
+    category: string;
+    categoryHref: string;
+    summary: string;
+    description: string[];
+    features: string[];
+    images: ShopProductImage[];
+    ratingBreakdown: ShopRatingBreakdown[];
+    reviewList: ShopReview[];
 };
 
 export type ShopCategory = {

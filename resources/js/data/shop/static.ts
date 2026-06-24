@@ -55,6 +55,7 @@ export const categories: ShopCategory[] = [
 export const bestSellingProducts: ShopProduct[] = [
     {
         name: 'Wireless Noise-Cancelling Headphones',
+        slug: 'wireless-noise-cancelling-headphones',
         price: 6499,
         oldPrice: 8999,
         img: 'photo-1505740420928-5e560c06d30e',

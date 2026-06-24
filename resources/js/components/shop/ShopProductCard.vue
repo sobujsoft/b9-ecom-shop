@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useShopCart } from '@/composables/shop/useShopCart';
 import { useShopUi } from '@/composables/shop/useShopUi';
 import { useShopWishlist } from '@/composables/shop/useShopWishlist';
 import { formatTaka } from '@/lib/shop/currency';
+import { productShowUrl } from '@/lib/shop/product';
 import type { ShopProduct } from '@/types/shop';
 
 const { product } = defineProps<{
@@ -42,8 +44,8 @@ function handleBuyNow(): void {
         class="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition duration-300 ease-out hover:-translate-y-1 hover:border-shop-primary-600 hover:shadow-xl"
     >
         <div class="relative aspect-square overflow-hidden bg-gray-100">
-            <a
-                href="#"
+            <Link
+                :href="productShowUrl(product)"
                 :aria-label="`View ${product.name}`"
                 class="block h-full w-full"
             >
@@ -57,7 +59,7 @@ function handleBuyNow(): void {
                 <div
                     class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent opacity-0 transition duration-300 group-hover:opacity-100"
                 />
-            </a>
+            </Link>
 
             <div
                 v-if="!product.inStock"
@@ -109,13 +111,13 @@ function handleBuyNow(): void {
         </div>
 
         <div class="flex flex-1 flex-col p-3 md:p-4">
-            <a href="#" class="block">
+            <Link :href="productShowUrl(product)" class="block">
                 <h3
                     class="line-clamp-2 text-sm font-medium text-gray-900 transition-colors duration-200 group-hover:text-shop-primary-600 md:text-base"
                 >
                     {{ product.name }}
                 </h3>
-            </a>
+            </Link>
 
             <div class="mt-1.5 flex items-center gap-1">
                 <div class="flex">

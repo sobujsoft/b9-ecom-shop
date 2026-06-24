@@ -23,13 +23,19 @@ export function useShopCart() {
         document.body.style.overflow = '';
     }
 
-    function addToCart(name: string, price: number, img: string): void {
+    function addToCart(
+        name: string,
+        price: number,
+        img: string,
+        qty = 1,
+    ): void {
+        const quantity = Math.max(1, qty);
         const existing = cart.value.find((item) => item.name === name);
 
         if (existing) {
-            existing.qty++;
+            existing.qty += quantity;
         } else {
-            cart.value.push({ name, price, img, qty: 1 });
+            cart.value.push({ name, price, img, qty: quantity });
         }
 
         openCart();
