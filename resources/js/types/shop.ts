@@ -10,6 +10,21 @@ export type ShopProduct = {
     tag?: string;
 };
 
+export type ShopCatalogProduct = ShopProduct & {
+    id: number;
+    category: string;
+    sold: number;
+};
+
+export type ShopSortOption = 'newest' | 'best' | 'price-asc' | 'price-desc';
+
+export type ShopPriceRange =
+    | 'all'
+    | '0-1000'
+    | '1000-3000'
+    | '3000-6000'
+    | '6000-';
+
 export type ShopProductImage = {
     full: string;
     thumb: string;

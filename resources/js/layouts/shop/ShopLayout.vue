@@ -6,15 +6,21 @@ import ShopHeader from '@/components/shop/ShopHeader.vue';
 import ShopMobileDrawer from '@/components/shop/ShopMobileDrawer.vue';
 import ShopToast from '@/components/shop/ShopToast.vue';
 import { useShopCart } from '@/composables/shop/useShopCart';
+import { useShopCatalog } from '@/composables/shop/useShopCatalog';
 import { useShopUi } from '@/composables/shop/useShopUi';
 
 const { closeCart } = useShopCart();
+const { closeFilterDrawer, isFilterDrawerOpen } = useShopCatalog();
 const { closeMobileMenu } = useShopUi();
 
 function handleEscape(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
         closeMobileMenu();
         closeCart();
+
+        if (isFilterDrawerOpen.value) {
+            closeFilterDrawer();
+        }
     }
 }
 

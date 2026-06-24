@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import ShopLogo from '@/components/shop/ShopLogo.vue';
 import { home } from '@/routes';
+import shop from '@/routes/shop';
 
 const year = computed(() => new Date().getFullYear());
 </script>
@@ -82,10 +83,10 @@ const year = computed(() => new Date().getFullYear());
                             >
                         </li>
                         <li>
-                            <a
-                                href="#categories"
+                            <Link
+                                :href="shop.index()"
                                 class="text-gray-400 transition hover:text-white"
-                                >Shop</a
+                                >Shop</Link
                             >
                         </li>
                         <li>

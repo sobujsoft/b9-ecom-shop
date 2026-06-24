@@ -1,9 +1,24 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { useShopCatalog } from '@/composables/shop/useShopCatalog';
 import { useShopUi } from '@/composables/shop/useShopUi';
 import { home } from '@/routes';
+import shop from '@/routes/shop';
 
+const page = usePage();
 const { isMobileMenuOpen, closeMobileMenu } = useShopUi();
+const { search, setSearch } = useShopCatalog();
+
+const isShopPage = computed(() => page.component === 'shop/Shop');
+
+function handleSearchInput(event: Event): void {
+    if (!isShopPage.value) {
+        return;
+    }
+
+    setSearch((event.target as HTMLInputElement).value);
+}
 </script>
 
 <template>
@@ -73,8 +88,10 @@ const { isMobileMenuOpen, closeMobileMenu } = useShopUi();
                     <input
                         id="searchMobile"
                         type="search"
+                        :value="isShopPage ? search : ''"
                         placeholder="Search for products…"
                         class="w-full rounded-lg border border-gray-300 bg-gray-50 py-2.5 pr-4 pl-10 text-sm focus:border-shop-primary-600 focus:bg-white focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
+                        @input="handleSearchInput"
                     />
                 </div>
                 <nav class="flex flex-col" aria-label="Mobile">
@@ -85,29 +102,34 @@ const { isMobileMenuOpen, closeMobileMenu } = useShopUi();
                     >
                         Home
                     </Link>
-                    <a
-                        href="#"
-                        class="rounded-lg px-3 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
+                    <Link
+                        :href="shop.index()"
+                        class="rounded-lg px-3 py-3 text-base font-medium hover:bg-gray-100"
+                        :class="
+                            isShopPage
+                                ? 'bg-shop-primary-50 text-shop-primary-600'
+                                : 'text-gray-700'
+                        "
                         @click="closeMobileMenu"
                     >
                         Shop
-                    </a>
+                    </Link>
                     <a
-                        href="#categories"
+                        href="/#categories"
                         class="rounded-lg px-3 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
                         @click="closeMobileMenu"
                     >
                         Categories
                     </a>
                     <a
-                        href="#bestselling"
+                        href="/#bestselling"
                         class="rounded-lg px-3 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
                         @click="closeMobileMenu"
                     >
                         Best Selling
                     </a>
                     <a
-                        href="#newcollection"
+                        href="/#newcollection"
                         class="rounded-lg px-3 py-3 text-base font-medium text-gray-700 hover:bg-gray-100"
                         @click="closeMobileMenu"
                     >
