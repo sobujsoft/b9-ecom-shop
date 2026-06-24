@@ -75,3 +75,9 @@ export type ShopCartItem = {
 };
 
 export type ShopWishlistItem = ShopProduct;
+
+export type ShopPlacedOrder = {
+    orderNumber: string;
+    total: string;
+    paymentLabel: string;
+};

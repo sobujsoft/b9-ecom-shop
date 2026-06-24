@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 import ShopCheckoutSummary from '@/components/shop/ShopCheckoutSummary.vue';
-import ShopOrderConfirmation from '@/components/shop/ShopOrderConfirmation.vue';
 import ShopPageBreadcrumb from '@/components/shop/ShopPageBreadcrumb.vue';
 import {
     bangladeshDistricts,
     deliveryCharges,
 } from '@/data/shop/cart-checkout';
 import { useShopCart } from '@/composables/shop/useShopCart';
+import { useShopOrder } from '@/composables/shop/useShopOrder';
 import { useShopUi } from '@/composables/shop/useShopUi';
 import { formatTaka } from '@/lib/shop/currency';
 import shop from '@/routes/shop';
@@ -36,12 +36,9 @@ const {
     clearCart,
 } = useShopCart();
 const { showToast } = useShopUi();
+const { setLastOrder } = useShopOrder();
 
 const paymentMethod = ref<PaymentMethod>('cod');
-const isOrderPlaced = ref(false);
-const orderNumber = ref('');
-const orderTotal = ref('');
-const orderPaymentLabel = ref('');
 
 const form = reactive<FormFields>({
     fullName: '',
@@ -167,15 +164,16 @@ function handleSubmit(event: Event): void {
     }
 
     const placeOrder = (): void => {
-        orderNumber.value = `SE-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
-        orderTotal.value = formatTaka(grandTotal.value);
-        orderPaymentLabel.value =
-            paymentMethod.value === 'cod'
-                ? 'Cash on Delivery'
-                : 'SSLCommerz (Paid)';
-        isOrderPlaced.value = true;
+        setLastOrder({
+            orderNumber: `SE-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`,
+            total: formatTaka(grandTotal.value),
+            paymentLabel:
+                paymentMethod.value === 'cod'
+                    ? 'Cash on Delivery'
+                    : 'SSLCommerz (Paid)',
+        });
         clearCart();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        router.visit(shop.orders.success());
     };
 
     if (paymentMethod.value === 'sslcommerz') {
@@ -213,15 +211,7 @@ function handleSubmit(event: Event): void {
                 ]"
             />
 
-            <ShopOrderConfirmation
-                v-if="isOrderPlaced"
-                :order-number="orderNumber"
-                :total="orderTotal"
-                :payment-label="orderPaymentLabel"
-            />
-
             <form
-                v-else
                 novalidate
                 class="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8"
                 @submit="handleSubmit"

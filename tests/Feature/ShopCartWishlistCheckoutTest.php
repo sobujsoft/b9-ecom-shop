@@ -25,3 +25,11 @@ test('checkout page renders with inertia', function () {
             ->component('shop/Checkout')
         );
 });
+
+test('order success page renders with inertia', function () {
+    $this->get(route('shop.orders.success'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('shop/OrderSuccess')
+        );
+});
