@@ -1,20 +1,23 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import ShopMobileProductBar from '@/components/shop/ShopMobileProductBar.vue';
 import ShopProductBreadcrumb from '@/components/shop/ShopProductBreadcrumb.vue';
 import ShopProductGallery from '@/components/shop/ShopProductGallery.vue';
 import ShopProductInfo from '@/components/shop/ShopProductInfo.vue';
 import ShopProductTabs from '@/components/shop/ShopProductTabs.vue';
 import ShopRelatedProducts from '@/components/shop/ShopRelatedProducts.vue';
-import { relatedProducts } from '@/data/shop/product-details';
-import { getProductBySlug } from '@/lib/shop/product';
+import type { ShopProduct, ShopProductDetail } from '@/types/shop';
 
-const { slug } = defineProps<{
-    slug: string;
-}>();
+const page = usePage();
 
-const product = computed(() => getProductBySlug(slug));
+const product = computed(
+    () => page.props.product as ShopProductDetail | undefined,
+);
+const relatedProducts = computed(
+    () => (page.props.relatedProducts as ShopProduct[] | undefined) ?? [],
+);
+
 const quantity = ref(1);
 </script>
 
@@ -40,6 +43,7 @@ const quantity = ref(1);
         <div class="pb-24 lg:pb-0">
             <ShopProductBreadcrumb
                 :category="product.category"
+                :category-href="product.categoryHref"
                 :product-name="product.name"
             />
 
@@ -59,7 +63,10 @@ const quantity = ref(1);
             </section>
 
             <ShopProductTabs :product="product" />
-            <ShopRelatedProducts :products="relatedProducts" />
+            <ShopRelatedProducts
+                v-if="relatedProducts.length > 0"
+                :products="relatedProducts"
+            />
         </div>
 
         <ShopMobileProductBar

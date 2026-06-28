@@ -103,10 +103,16 @@ function submitReview(event: Event): void {
                     <p v-for="(paragraph, index) in product.description" :key="index">
                         {{ paragraph }}
                     </p>
-                    <h3 class="pt-2 text-base font-semibold text-gray-900">
+                    <h3
+                        v-if="product.features.length > 0"
+                        class="pt-2 text-base font-semibold text-gray-900"
+                    >
                         Key Features
                     </h3>
-                    <ul class="list-disc space-y-1.5 pl-5">
+                    <ul
+                        v-if="product.features.length > 0"
+                        class="list-disc space-y-1.5 pl-5"
+                    >
                         <li
                             v-for="(feature, index) in product.features"
                             :key="index"

@@ -2,8 +2,9 @@
 import { Link } from '@inertiajs/vue3';
 import { home } from '@/routes';
 
-const { category, productName } = defineProps<{
+const { category, categoryHref, productName } = defineProps<{
     category: string;
+    categoryHref: string;
     productName: string;
 }>();
 </script>
@@ -23,7 +24,7 @@ const { category, productName } = defineProps<{
                 <li aria-hidden="true" class="text-gray-300">/</li>
                 <li>
                     <a
-                        href="/#categories"
+                        :href="categoryHref"
                         class="hover:text-shop-primary-600"
                         >{{ category }}</a
                     >
