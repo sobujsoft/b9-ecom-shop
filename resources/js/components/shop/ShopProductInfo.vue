@@ -51,24 +51,12 @@ function handleToggleWish(): void {
 }
 
 function handleAddToCart(): void {
-    addToCart(
-        product.name,
-        product.price,
-        product.img,
-        quantity.value,
-        product.slug,
-    );
+    addToCart(product.id, quantity.value);
     showToast('Added to cart');
 }
 
 function handleBuyNow(): void {
-    addToCart(
-        product.name,
-        product.price,
-        product.img,
-        quantity.value,
-        product.slug,
-    );
+    addToCart(product.id, quantity.value);
 }
 
 function goToReviews(): void {

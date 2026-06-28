@@ -2,11 +2,14 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\CartService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
+    public function __construct(private readonly CartService $cartService) {}
+
     /**
      * The root template that's loaded on the first page visit.
      *
@@ -42,6 +45,12 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'cart' => fn () => [
+                'qty' => $this->cartService->totalQty(),
+                'items' => $this->cartService->totalQty() > 0
+                    ? $this->cartService->items()
+                    : [],
+            ],
         ];
     }
 }

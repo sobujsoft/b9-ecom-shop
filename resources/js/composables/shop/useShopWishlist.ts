@@ -65,17 +65,14 @@ export function useShopWishlist() {
     }
 
     function addAllToCart(showToast: (message: string) => void): number {
-        const inStockItems = wishlist.value.filter((item) => item.inStock);
+        const inStockItems = wishlist.value.filter(
+            (item) => item.inStock && item.id,
+        );
 
         inStockItems.forEach((item) => {
-            addToCart(
-                item.name,
-                item.price,
-                item.img,
-                1,
-                item.slug ?? productSlug(item.name),
-                false,
-            );
+            if (item.id) {
+                addToCart(item.id, 1, false);
+            }
         });
 
         if (inStockItems.length === 0) {

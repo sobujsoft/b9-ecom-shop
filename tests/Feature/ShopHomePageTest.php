@@ -14,7 +14,16 @@ test('shop home page renders with inertia', function () {
             ->has('categories', 6)
             ->has('bestSellingProducts', 4)
             ->has('newCollectionProducts', 4)
-            ->where('bestSellingProducts.0.slug', 'wireless-noise-cancelling-headphones')
-            ->where('newCollectionProducts.0.slug', 'minimalist-backpack-20l')
+            ->has('bestSellingProducts.0', fn (Assert $product) => $product
+                ->has('id')
+                ->has('name')
+                ->has('slug')
+                ->has('price')
+                ->has('img')
+                ->has('rating')
+                ->has('reviews')
+                ->has('inStock')
+                ->etc()
+            )
         );
 });

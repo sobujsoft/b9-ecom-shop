@@ -71,6 +71,7 @@ class ProductController extends Controller
             ?? $product->images->first();
 
         return [
+            'id' => $product->id,
             'slug' => $product->slug,
             'name' => $product->name,
             'category' => $product->category->name,
@@ -122,6 +123,7 @@ class ProductController extends Controller
                 $primaryImage = $related->images->first();
 
                 return [
+                    'id' => $related->id,
                     'name' => $related->name,
                     'slug' => $related->slug,
                     'price' => (float) $related->price,

@@ -120,6 +120,7 @@ class HomeController extends Controller
             $primaryImage = $product->images->first();
 
             return [
+                'id' => $product->id,
                 'name' => $product->name,
                 'slug' => $product->slug,
                 'price' => (float) $product->price,

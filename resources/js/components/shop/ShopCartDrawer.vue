@@ -10,8 +10,7 @@ const {
     cartSubtotal,
     isCartOpen,
     closeCart,
-    incrementQty,
-    decrementQty,
+    updateQty,
     removeItem,
 } = useShopCart();
 </script>
@@ -96,8 +95,8 @@ const {
             <template v-else>
                 <div class="flex-1 overflow-y-auto px-5">
                     <div
-                        v-for="(item, index) in cart"
-                        :key="`${item.name}-${index}`"
+                        v-for="item in cart"
+                        :key="item.productId"
                         class="flex gap-3 border-b border-gray-100 py-4"
                     >
                         <div
@@ -122,7 +121,7 @@ const {
                                     type="button"
                                     aria-label="Remove"
                                     class="shrink-0 text-gray-300 hover:text-red-600"
-                                    @click="removeItem(index)"
+                                    @click="removeItem(item.productId)"
                                 >
                                     <svg
                                         class="h-4 w-4"
@@ -150,7 +149,7 @@ const {
                                         aria-label="Decrease"
                                         class="inline-flex h-8 w-8 items-center justify-center rounded-l-lg text-gray-600 hover:bg-gray-100 disabled:opacity-40"
                                         :disabled="item.qty <= 1"
-                                        @click="decrementQty(index)"
+                                        @click="updateQty(item.productId, item.qty - 1)"
                                     >
                                         <svg
                                             class="h-4 w-4"
@@ -174,7 +173,7 @@ const {
                                         type="button"
                                         aria-label="Increase"
                                         class="inline-flex h-8 w-8 items-center justify-center rounded-r-lg text-gray-600 hover:bg-gray-100"
-                                        @click="incrementQty(index)"
+                                        @click="updateQty(item.productId, item.qty + 1)"
                                     >
                                         <svg
                                             class="h-4 w-4"

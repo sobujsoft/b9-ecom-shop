@@ -14,12 +14,12 @@ const { addToCart } = useShopCart();
 const { showToast } = useShopUi();
 
 function handleAddToCart(): void {
-    addToCart(product.name, product.price, product.img, quantity.value);
+    addToCart(product.id, quantity.value);
     showToast('Added to cart');
 }
 
 function handleBuyNow(): void {
-    addToCart(product.name, product.price, product.img, quantity.value);
+    addToCart(product.id, quantity.value);
 }
 </script>
 

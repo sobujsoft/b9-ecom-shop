@@ -1,4 +1,5 @@
 export type ShopProduct = {
+    id?: number;
     name: string;
     slug?: string;
     price: number;
@@ -44,6 +45,7 @@ export type ShopReview = {
 };
 
 export type ShopProductDetail = ShopProduct & {
+    id: number;
     slug: string;
     category: string;
     categoryHref: string;
@@ -88,11 +90,18 @@ export type ShopCarouselSlide = {
 };
 
 export type ShopCartItem = {
+    productId: number;
     name: string;
-    slug?: string;
+    slug: string;
     price: number;
     img: string;
     qty: number;
+    inStock: boolean;
+};
+
+export type ShopCart = {
+    qty: number;
+    items: ShopCartItem[];
 };
 
 export type ShopWishlistItem = ShopProduct;

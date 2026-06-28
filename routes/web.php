@@ -12,7 +12,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomeController::class)->name('home');
 Route::get('/shop', ShopController::class)->name('shop.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('shop.products.show');
-Route::get('/cart', CartController::class)->name('shop.cart');
+
+// Cart
+Route::get('/cart', [CartController::class, 'index'])->name('shop.cart');
+Route::post('/cart', [CartController::class, 'store'])->name('shop.cart.store');
+Route::patch('/cart/{productId}', [CartController::class, 'update'])->name('shop.cart.update');
+Route::delete('/cart', [CartController::class, 'clear'])->name('shop.cart.clear');
+Route::delete('/cart/{productId}', [CartController::class, 'destroy'])->name('shop.cart.destroy');
+
 Route::get('/wishlist', WishlistController::class)->name('shop.wishlist');
 Route::get('/checkout', CheckoutController::class)->name('shop.checkout');
 Route::get('/orders/success', OrderSuccessController::class)->name('shop.orders.success');

@@ -11,19 +11,31 @@ const {
     cart,
     cartQty,
     cartSubtotal,
-    incrementQty,
-    decrementQty,
+    updateQty,
     removeItem,
     clearCart,
 } = useShopCart();
 const { showToast } = useShopUi();
 
-function handleRemove(index: number): void {
-    const removed = removeItem(index);
-
-    if (removed) {
-        showToast(`Removed: ${removed.name}`);
+function handleIncrement(productId: number): void {
+    const item = cart.value.find((i) => i.productId === productId);
+    if (item) {
+        updateQty(productId, item.qty + 1);
     }
+}
+
+function handleDecrement(productId: number): void {
+    const item = cart.value.find((i) => i.productId === productId);
+    if (item && item.qty > 1) {
+        updateQty(productId, item.qty - 1);
+    }
+}
+
+function handleRemove(productId: number): void {
+    const item = cart.value.find((i) => i.productId === productId);
+    const name = item?.name ?? 'item';
+    removeItem(productId);
+    showToast(`Removed: ${name}`);
 }
 
 function handleClearCart(): void {
@@ -74,12 +86,11 @@ function handleClearCart(): void {
                         </div>
                         <ul class="divide-y divide-gray-100">
                             <ShopCartLineItem
-                                v-for="(item, index) in cart"
-                                :key="`${item.name}-${index}`"
+                                v-for="item in cart"
+                                :key="item.productId"
                                 :item="item"
-                                :index="index"
-                                @increment="incrementQty"
-                                @decrement="decrementQty"
+                                @increment="handleIncrement"
+                                @decrement="handleDecrement"
                                 @remove="handleRemove"
                             />
                         </ul>

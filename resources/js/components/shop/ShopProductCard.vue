@@ -34,24 +34,14 @@ function handleToggleWish(): void {
 }
 
 function handleAddToCart(): void {
-    addToCart(
-        product.name,
-        product.price,
-        product.img,
-        1,
-        product.slug,
-    );
+    if (!product.id) return;
+    addToCart(product.id, 1);
     showToast('Added to cart');
 }
 
 function handleBuyNow(): void {
-    addToCart(
-        product.name,
-        product.price,
-        product.img,
-        1,
-        product.slug,
-    );
+    if (!product.id) return;
+    addToCart(product.id, 1);
 }
 </script>
 
