@@ -20,7 +20,12 @@ Route::patch('/cart/{productId}', [CartController::class, 'update'])->name('shop
 Route::delete('/cart', [CartController::class, 'clear'])->name('shop.cart.clear');
 Route::delete('/cart/{productId}', [CartController::class, 'destroy'])->name('shop.cart.destroy');
 
-Route::get('/wishlist', WishlistController::class)->name('shop.wishlist');
+Route::get('/wishlist', [WishlistController::class, 'index'])->name('shop.wishlist');
+Route::middleware('auth')->group(function () {
+    Route::post('/wishlist', [WishlistController::class, 'store'])->name('shop.wishlist.store');
+    Route::delete('/wishlist', [WishlistController::class, 'clear'])->name('shop.wishlist.clear');
+    Route::delete('/wishlist/{productId}', [WishlistController::class, 'destroy'])->name('shop.wishlist.destroy');
+});
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('shop.checkout');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('shop.checkout.store');
 Route::get('/orders/success', OrderSuccessController::class)->name('shop.orders.success');

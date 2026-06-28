@@ -3,12 +3,16 @@
 namespace App\Http\Middleware;
 
 use App\Services\CartService;
+use App\Services\WishlistService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-    public function __construct(private readonly CartService $cartService) {}
+    public function __construct(
+        private readonly CartService $cartService,
+        private readonly WishlistService $wishlistService,
+    ) {}
 
     /**
      * The root template that's loaded on the first page visit.
@@ -49,6 +53,13 @@ class HandleInertiaRequests extends Middleware
                 'qty' => $this->cartService->totalQty(),
                 'items' => $this->cartService->totalQty() > 0
                     ? $this->cartService->items()
+                    : [],
+            ],
+            'wishlist' => fn () => [
+                'count' => $this->wishlistService->count(),
+                'productIds' => $this->wishlistService->productIds(),
+                'items' => $this->wishlistService->count() > 0
+                    ? $this->wishlistService->items()
                     : [],
             ],
         ];

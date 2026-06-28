@@ -104,7 +104,15 @@ export type ShopCart = {
     items: ShopCartItem[];
 };
 
-export type ShopWishlistItem = ShopProduct;
+export type ShopWishlistItem = ShopProduct & {
+    id: number;
+};
+
+export type ShopWishlist = {
+    count: number;
+    productIds: number[];
+    items: ShopWishlistItem[];
+};
 
 export type ShopPlacedOrder = {
     orderNumber: string;

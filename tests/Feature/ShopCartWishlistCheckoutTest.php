@@ -2,6 +2,8 @@
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
+use App\Models\Wishlist;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -40,6 +42,20 @@ test('wishlist page renders with inertia', function () {
     $this->get(route('shop.wishlist'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->component('shop/Wishlist'));
+});
+
+test('wishlist shared props are included on every inertia page', function () {
+    $this->get(route('shop.cart'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('wishlist')
+            ->has('wishlist.count')
+            ->has('wishlist.productIds')
+            ->has('wishlist.items')
+            ->where('wishlist.count', 0)
+            ->where('wishlist.productIds', [])
+            ->where('wishlist.items', [])
+        );
 });
 
 test('checkout page redirects to cart when empty', function () {
@@ -300,4 +316,92 @@ test('can clear the entire cart', function () {
             ->where('cart.qty', 0)
             ->where('cart.items', [])
         );
+});
+
+// ─── Wishlist store ───────────────────────────────────────────────────────────
+
+test('guests cannot add products to the wishlist', function () {
+    $this->seed(DatabaseSeeder::class);
+
+    $product = Product::where('is_active', true)->first();
+
+    $this->post(route('shop.wishlist.store'), ['product_id' => $product->id])
+        ->assertRedirect(route('login'));
+});
+
+test('authenticated user can add a product to the wishlist', function () {
+    $this->seed(DatabaseSeeder::class);
+
+    $user = User::factory()->create();
+    $product = Product::where('is_active', true)->first();
+
+    $this->actingAs($user)
+        ->post(route('shop.wishlist.store'), ['product_id' => $product->id])
+        ->assertRedirect();
+
+    expect(Wishlist::where('user_id', $user->id)->count())->toBe(1);
+
+    $this->actingAs($user)
+        ->get(route('shop.wishlist'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('wishlist.count', 1)
+            ->has('wishlist.items', 1)
+            ->where('wishlist.items.0.id', $product->id)
+            ->where('wishlist.productIds', [$product->id])
+        );
+});
+
+test('adding the same product to the wishlist is idempotent', function () {
+    $this->seed(DatabaseSeeder::class);
+
+    $user = User::factory()->create();
+    $product = Product::where('is_active', true)->first();
+
+    $this->actingAs($user)->post(route('shop.wishlist.store'), ['product_id' => $product->id]);
+    $this->actingAs($user)->post(route('shop.wishlist.store'), ['product_id' => $product->id]);
+
+    expect(Wishlist::where('user_id', $user->id)->count())->toBe(1);
+});
+
+// ─── Wishlist destroy ─────────────────────────────────────────────────────────
+
+test('authenticated user can remove a product from the wishlist', function () {
+    $this->seed(DatabaseSeeder::class);
+
+    $user = User::factory()->create();
+    $product = Product::where('is_active', true)->first();
+
+    $this->actingAs($user)->post(route('shop.wishlist.store'), ['product_id' => $product->id]);
+
+    $this->actingAs($user)
+        ->delete(route('shop.wishlist.destroy', $product->id))
+        ->assertRedirect();
+
+    expect(Wishlist::where('user_id', $user->id)->count())->toBe(0);
+
+    $this->actingAs($user)
+        ->get(route('shop.wishlist'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('wishlist.count', 0)
+            ->where('wishlist.items', [])
+        );
+});
+
+// ─── Wishlist clear ───────────────────────────────────────────────────────────
+
+test('authenticated user can clear the entire wishlist', function () {
+    $this->seed(DatabaseSeeder::class);
+
+    $user = User::factory()->create();
+    $products = Product::where('is_active', true)->take(2)->get();
+
+    foreach ($products as $product) {
+        $this->actingAs($user)->post(route('shop.wishlist.store'), ['product_id' => $product->id]);
+    }
+
+    $this->actingAs($user)
+        ->delete(route('shop.wishlist.clear'))
+        ->assertRedirect();
+
+    expect(Wishlist::where('user_id', $user->id)->count())->toBe(0);
 });

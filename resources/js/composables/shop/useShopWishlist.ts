@@ -1,78 +1,92 @@
 import { computed, ref } from 'vue';
-import { staticWishlistItems } from '@/data/shop/cart-checkout';
+import { router, usePage } from '@inertiajs/vue3';
 import { useShopCart } from '@/composables/shop/useShopCart';
-import { productSlug } from '@/lib/shop/product';
-import type { ShopProduct, ShopWishlistItem } from '@/types/shop';
+import type { ShopProduct, ShopWishlist, ShopWishlistItem } from '@/types/shop';
 
-const wishlist = ref<ShopWishlistItem[]>([...staticWishlistItems]);
+/** True while any wishlist mutation request is in flight. */
+const isProcessing = ref(false);
 
 export function useShopWishlist() {
+    const inertiaPage = usePage();
     const { addToCart } = useShopCart();
 
-    const wishCount = computed(() => wishlist.value.length);
+    const serverWishlist = computed(
+        (): ShopWishlist =>
+            (inertiaPage.props.wishlist as ShopWishlist | undefined) ?? {
+                count: 0,
+                productIds: [],
+                items: [],
+            },
+    );
 
-    function isWishlisted(productName: string): boolean {
-        return wishlist.value.some((item) => item.name === productName);
+    const isAuthenticated = computed(
+        () => !!inertiaPage.props.auth?.user,
+    );
+
+    const wishlist = computed((): ShopWishlistItem[] => serverWishlist.value.items);
+    const wishCount = computed((): number => serverWishlist.value.count);
+    const wishlistedProductIds = computed(
+        (): number[] => serverWishlist.value.productIds,
+    );
+
+    function isWishlisted(productId: number): boolean {
+        return wishlistedProductIds.value.includes(productId);
     }
 
-    function addToWishlist(product: ShopProduct): void {
-        if (isWishlisted(product.name)) {
-            return;
-        }
-
-        wishlist.value.push({
-            ...product,
-            slug: product.slug ?? productSlug(product.name),
-        });
-    }
-
-    function removeFromWishlist(index: number): ShopWishlistItem | undefined {
-        const [removed] = wishlist.value.splice(index, 1);
-
-        return removed;
-    }
-
-    function removeByName(productName: string): void {
-        const index = wishlist.value.findIndex(
-            (item) => item.name === productName,
+    function addToWishlist(productId: number): void {
+        router.post(
+            '/wishlist',
+            { product_id: productId },
+            {
+                preserveScroll: true,
+                onStart: () => {
+                    isProcessing.value = true;
+                },
+                onFinish: () => {
+                    isProcessing.value = false;
+                },
+            },
         );
+    }
 
-        if (index !== -1) {
-            wishlist.value.splice(index, 1);
-        }
+    function removeFromWishlist(productId: number): void {
+        router.delete(`/wishlist/${productId}`, { preserveScroll: true });
     }
 
     function clearWishlist(): void {
-        wishlist.value = [];
+        router.delete('/wishlist', { preserveScroll: true });
     }
 
     function toggleWish(
-        isActive: boolean,
         product: ShopProduct,
         showToast: (message: string) => void,
-    ): boolean {
-        if (isActive) {
-            removeByName(product.name);
-            showToast(`Removed from wishlist: ${product.name}`);
-
-            return false;
+    ): void {
+        if (!product.id) {
+            return;
         }
 
-        addToWishlist(product);
-        showToast(`Added to wishlist: ${product.name}`);
+        if (!isAuthenticated.value) {
+            showToast('Please log in to save items to your wishlist');
 
-        return true;
+            return;
+        }
+
+        if (isWishlisted(product.id)) {
+            removeFromWishlist(product.id);
+            showToast(`Removed from wishlist: ${product.name}`);
+
+            return;
+        }
+
+        addToWishlist(product.id);
+        showToast(`Added to wishlist: ${product.name}`);
     }
 
     function addAllToCart(showToast: (message: string) => void): number {
-        const inStockItems = wishlist.value.filter(
-            (item) => item.inStock && item.id,
-        );
+        const inStockItems = wishlist.value.filter((item) => item.inStock);
 
         inStockItems.forEach((item) => {
-            if (item.id) {
-                addToCart(item.id, 1, false);
-            }
+            addToCart(item.id, 1, false);
         });
 
         if (inStockItems.length === 0) {
@@ -91,10 +105,12 @@ export function useShopWishlist() {
     return {
         wishlist,
         wishCount,
+        wishlistedProductIds,
+        isAuthenticated,
+        isProcessing,
         isWishlisted,
         addToWishlist,
         removeFromWishlist,
-        removeByName,
         clearWishlist,
         toggleWish,
         addAllToCart,
