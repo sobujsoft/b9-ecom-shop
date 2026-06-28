@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
+import shop from '@/routes/shop';
 import type { ShopCart, ShopCartItem } from '@/types/shop';
 
 // ─── Module-level singletons ──────────────────────────────────────────────────
@@ -74,6 +75,28 @@ export function useShopCart() {
     }
 
     /**
+     * Add a product to the cart, then go straight to checkout.
+     */
+    function buyNow(productId: number, qty = 1): void {
+        router.post(
+            '/cart',
+            { product_id: productId, qty },
+            {
+                preserveScroll: true,
+                onStart: () => {
+                    isProcessing.value = true;
+                },
+                onFinish: () => {
+                    isProcessing.value = false;
+                },
+                onSuccess: () => {
+                    router.visit(shop.checkout());
+                },
+            },
+        );
+    }
+
+    /**
      * Set the exact quantity for a cart item (server-side, min 1).
      */
     function updateQty(productId: number, qty: number): void {
@@ -103,6 +126,7 @@ export function useShopCart() {
         openCart,
         closeCart,
         addToCart,
+        buyNow,
         updateQty,
         removeItem,
         clearCart,

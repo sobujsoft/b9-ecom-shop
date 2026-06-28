@@ -14,7 +14,7 @@ const { product } = defineProps<{
 
 const quantity = defineModel<number>('quantity', { default: 1 });
 
-const { addToCart } = useShopCart();
+const { addToCart, buyNow } = useShopCart();
 const { showToast } = useShopUi();
 const { toggleWish, isWishlisted: checkWishlisted } = useShopWishlist();
 
@@ -56,7 +56,7 @@ function handleAddToCart(): void {
 }
 
 function handleBuyNow(): void {
-    addToCart(product.id, quantity.value);
+    buyNow(product.id, quantity.value);
 }
 
 function goToReviews(): void {

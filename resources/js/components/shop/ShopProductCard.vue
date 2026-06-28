@@ -12,7 +12,7 @@ const { product } = defineProps<{
     product: ShopProduct;
 }>();
 
-const { addToCart } = useShopCart();
+const { addToCart, buyNow } = useShopCart();
 const { showToast } = useShopUi();
 const { toggleWish, isWishlisted: checkWishlisted } = useShopWishlist();
 
@@ -41,7 +41,7 @@ function handleAddToCart(): void {
 
 function handleBuyNow(): void {
     if (!product.id) return;
-    addToCart(product.id, 1);
+    buyNow(product.id, 1);
 }
 </script>
 
