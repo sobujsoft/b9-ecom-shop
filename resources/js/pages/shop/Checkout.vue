@@ -1,62 +1,30 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { computed, reactive, ref } from 'vue';
+import { Head, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import ShopCheckoutSummary from '@/components/shop/ShopCheckoutSummary.vue';
 import ShopPageBreadcrumb from '@/components/shop/ShopPageBreadcrumb.vue';
-import {
-    bangladeshDistricts,
-    deliveryCharges,
-} from '@/data/shop/cart-checkout';
 import { useShopCart } from '@/composables/shop/useShopCart';
-import { useShopOrder } from '@/composables/shop/useShopOrder';
 import { useShopUi } from '@/composables/shop/useShopUi';
-import { formatTaka } from '@/lib/shop/currency';
+import type { ShopCheckoutConfig } from '@/types/shop';
 import shop from '@/routes/shop';
 
-type PaymentMethod = 'cod' | 'sslcommerz';
+const { districts, deliveryCharges } = defineProps<{
+    districts: string[];
+    deliveryCharges: ShopCheckoutConfig;
+}>();
 
-type FormFields = {
-    fullName: string;
-    phone: string;
-    email: string;
-    district: string;
-    area: string;
-    address: string;
-    notes: string;
-};
-
-type FormErrors = Record<keyof Omit<FormFields, 'notes'>, boolean>;
-
-const {
-    cart,
-    cartSubtotal,
-    incrementQty,
-    decrementQty,
-    removeItem,
-    clearCart,
-} = useShopCart();
+const { cart, cartSubtotal, updateQty, removeItem } = useShopCart();
 const { showToast } = useShopUi();
-const { setLastOrder } = useShopOrder();
 
-const paymentMethod = ref<PaymentMethod>('cod');
-
-const form = reactive<FormFields>({
-    fullName: '',
+const form = useForm({
+    customer_name: '',
     phone: '',
     email: '',
     district: '',
     area: '',
     address: '',
     notes: '',
-});
-
-const errors = reactive<FormErrors>({
-    fullName: false,
-    phone: false,
-    email: false,
-    district: false,
-    area: false,
-    address: false,
+    payment_method: 'cod' as const,
 });
 
 const deliveryCharge = computed(() => {
@@ -65,12 +33,12 @@ const deliveryCharge = computed(() => {
     }
 
     if (!form.district) {
-        return deliveryCharges.outside;
+        return deliveryCharges.outsideDhaka;
     }
 
-    return form.district === 'Dhaka'
-        ? deliveryCharges.dhaka
-        : deliveryCharges.outside;
+    return form.district === deliveryCharges.dhakaDistrict
+        ? deliveryCharges.insideDhaka
+        : deliveryCharges.outsideDhaka;
 });
 
 const deliveryNote = computed(() => {
@@ -78,109 +46,45 @@ const deliveryNote = computed(() => {
         return '';
     }
 
-    return form.district === 'Dhaka'
+    return form.district === deliveryCharges.dhakaDistrict
         ? '(Inside Dhaka)'
         : '(Outside Dhaka)';
 });
 
-const grandTotal = computed(() => cartSubtotal.value + deliveryCharge.value);
-
-function clearFieldError(field: keyof FormErrors): void {
-    errors[field] = false;
-}
-
-function setFieldError(field: keyof FormErrors, hasError: boolean): void {
-    errors[field] = hasError;
-}
-
-function validateForm(): boolean {
-    let isValid = true;
-    let firstInvalidField: HTMLElement | undefined;
-
-    const requiredFields: (keyof FormErrors)[] = [
-        'fullName',
-        'phone',
-        'email',
-        'district',
-        'area',
-        'address',
-    ];
-
-    requiredFields.forEach((field) => {
-        let hasError = !form[field].trim();
-
-        if (field === 'phone' && form.phone.trim()) {
-            hasError = !/^01\d{9}$/.test(
-                form.phone.replace(/\s|-/g, ''),
-            );
-        }
-
-        if (field === 'email' && form.email.trim()) {
-            hasError = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
-        }
-
-        setFieldError(field, hasError);
-
-        if (hasError) {
-            isValid = false;
-
-            if (!firstInvalidField) {
-                firstInvalidField =
-                    document.getElementById(field) ?? undefined;
-            }
-        }
-    });
-
-    firstInvalidField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    return isValid;
-}
-
-function handleRemove(index: number): void {
-    const removed = removeItem(index);
-
-    if (removed) {
-        showToast(`Removed: ${removed.name}`);
+function handleIncrement(productId: number): void {
+    const item = cart.value.find((i) => i.productId === productId);
+    if (item) {
+        updateQty(productId, item.qty + 1);
     }
 }
 
-function handleSubmit(event: Event): void {
-    event.preventDefault();
+function handleDecrement(productId: number): void {
+    const item = cart.value.find((i) => i.productId === productId);
+    if (item && item.qty > 1) {
+        updateQty(productId, item.qty - 1);
+    }
+}
 
+function handleRemove(productId: number): void {
+    const item = cart.value.find((i) => i.productId === productId);
+    removeItem(productId);
+    if (item) {
+        showToast(`Removed: ${item.name}`);
+    }
+}
+
+function handleSubmit(): void {
     if (cart.value.length === 0) {
         showToast('Your cart is empty');
-
         return;
     }
 
-    if (!validateForm()) {
-        showToast('Please complete the highlighted fields');
-
-        return;
-    }
-
-    if (paymentMethod.value === 'sslcommerz') {
-        showToast('Redirecting to SSLCommerz…');
-    }
-
-    const placeOrder = (): void => {
-        setLastOrder({
-            orderNumber: `SE-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`,
-            total: formatTaka(grandTotal.value),
-            paymentLabel:
-                paymentMethod.value === 'cod'
-                    ? 'Cash on Delivery'
-                    : 'SSLCommerz (Paid)',
-        });
-        clearCart();
-        router.visit(shop.orders.success());
-    };
-
-    if (paymentMethod.value === 'sslcommerz') {
-        window.setTimeout(placeOrder, 900);
-    } else {
-        placeOrder();
-    }
+    form.post('/checkout', {
+        preserveScroll: true,
+        onError: () => {
+            showToast('Please complete the highlighted fields');
+        },
+    });
 }
 </script>
 
@@ -188,7 +92,7 @@ function handleSubmit(event: Event): void {
     <Head title="Checkout">
         <meta
             name="description"
-            content="Secure checkout — Cash on Delivery or SSLCommerz. Delivery across Bangladesh."
+            content="Secure checkout with Cash on Delivery. Delivery across Bangladesh."
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -214,7 +118,7 @@ function handleSubmit(event: Event): void {
             <form
                 novalidate
                 class="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8"
-                @submit="handleSubmit"
+                @submit.prevent="handleSubmit"
             >
                 <div class="space-y-6 lg:col-span-2">
                     <section
@@ -230,33 +134,32 @@ function handleSubmit(event: Event): void {
                         <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label
-                                    for="fullName"
+                                    for="customer_name"
                                     class="mb-1.5 block text-sm font-medium text-gray-700"
                                 >
                                     Full name
                                     <span class="text-red-600">*</span>
                                 </label>
                                 <input
-                                    id="fullName"
-                                    v-model="form.fullName"
-                                    name="fullName"
+                                    id="customer_name"
+                                    v-model="form.customer_name"
+                                    name="customer_name"
                                     type="text"
                                     required
                                     autocomplete="name"
                                     class="w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
                                     :class="
-                                        errors.fullName
+                                        form.errors.customer_name
                                             ? 'border-red-500 focus:ring-red-500'
                                             : 'border-gray-300 focus:border-shop-primary-600'
                                     "
                                     placeholder="e.g. Rina Akter"
-                                    @input="clearFieldError('fullName')"
                                 />
                                 <p
-                                    v-show="errors.fullName"
+                                    v-show="form.errors.customer_name"
                                     class="mt-1 text-sm text-red-600"
                                 >
-                                    Please enter your name.
+                                    {{ form.errors.customer_name }}
                                 </p>
                             </div>
                             <div>
@@ -277,18 +180,17 @@ function handleSubmit(event: Event): void {
                                     inputmode="numeric"
                                     class="w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
                                     :class="
-                                        errors.phone
+                                        form.errors.phone
                                             ? 'border-red-500 focus:ring-red-500'
                                             : 'border-gray-300 focus:border-shop-primary-600'
                                     "
                                     placeholder="01XXXXXXXXX"
-                                    @input="clearFieldError('phone')"
                                 />
                                 <p
-                                    v-show="errors.phone"
+                                    v-show="form.errors.phone"
                                     class="mt-1 text-sm text-red-600"
                                 >
-                                    Enter a valid 11-digit phone number.
+                                    {{ form.errors.phone }}
                                 </p>
                             </div>
                             <div class="sm:col-span-2">
@@ -308,18 +210,17 @@ function handleSubmit(event: Event): void {
                                     autocomplete="email"
                                     class="w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
                                     :class="
-                                        errors.email
+                                        form.errors.email
                                             ? 'border-red-500 focus:ring-red-500'
                                             : 'border-gray-300 focus:border-shop-primary-600'
                                     "
                                     placeholder="you@example.com"
-                                    @input="clearFieldError('email')"
                                 />
                                 <p
-                                    v-show="errors.email"
+                                    v-show="form.errors.email"
                                     class="mt-1 text-sm text-red-600"
                                 >
-                                    Enter a valid email address.
+                                    {{ form.errors.email }}
                                 </p>
                             </div>
                             <div>
@@ -337,15 +238,14 @@ function handleSubmit(event: Event): void {
                                     required
                                     class="w-full rounded-lg border bg-white px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
                                     :class="
-                                        errors.district
+                                        form.errors.district
                                             ? 'border-red-500 focus:ring-red-500'
                                             : 'border-gray-300 focus:border-shop-primary-600'
                                     "
-                                    @change="clearFieldError('district')"
                                 >
                                     <option value="">Select district</option>
                                     <option
-                                        v-for="district in bangladeshDistricts"
+                                        v-for="district in districts"
                                         :key="district"
                                         :value="district"
                                     >
@@ -353,10 +253,10 @@ function handleSubmit(event: Event): void {
                                     </option>
                                 </select>
                                 <p
-                                    v-show="errors.district"
+                                    v-show="form.errors.district"
                                     class="mt-1 text-sm text-red-600"
                                 >
-                                    Please select your district.
+                                    {{ form.errors.district }}
                                 </p>
                             </div>
                             <div>
@@ -375,18 +275,17 @@ function handleSubmit(event: Event): void {
                                     required
                                     class="w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
                                     :class="
-                                        errors.area
+                                        form.errors.area
                                             ? 'border-red-500 focus:ring-red-500'
                                             : 'border-gray-300 focus:border-shop-primary-600'
                                     "
                                     placeholder="e.g. Dhanmondi"
-                                    @input="clearFieldError('area')"
                                 />
                                 <p
-                                    v-show="errors.area"
+                                    v-show="form.errors.area"
                                     class="mt-1 text-sm text-red-600"
                                 >
-                                    Please enter your area.
+                                    {{ form.errors.area }}
                                 </p>
                             </div>
                             <div class="sm:col-span-2">
@@ -405,18 +304,17 @@ function handleSubmit(event: Event): void {
                                     required
                                     class="w-full rounded-lg border px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
                                     :class="
-                                        errors.address
+                                        form.errors.address
                                             ? 'border-red-500 focus:ring-red-500'
                                             : 'border-gray-300 focus:border-shop-primary-600'
                                     "
                                     placeholder="House, road, and any landmark"
-                                    @input="clearFieldError('address')"
                                 />
                                 <p
-                                    v-show="errors.address"
+                                    v-show="form.errors.address"
                                     class="mt-1 text-sm text-red-600"
                                 >
-                                    Please enter your address.
+                                    {{ form.errors.address }}
                                 </p>
                             </div>
                             <div class="sm:col-span-2">
@@ -446,118 +344,34 @@ function handleSubmit(event: Event): void {
                             Payment Method
                         </h2>
                         <p class="mt-1 text-sm text-gray-500">
-                            Choose how you'd like to pay.
+                            Pay with cash when your order arrives.
                         </p>
 
-                        <div class="mt-5 space-y-3">
-                            <label
-                                class="flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition"
-                                :class="
-                                    paymentMethod === 'cod'
-                                        ? 'border-shop-primary-600 bg-shop-primary-50'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                "
+                        <div
+                            class="mt-5 flex items-start gap-3 rounded-xl border-2 border-shop-primary-600 bg-shop-primary-50 p-4"
+                        >
+                            <svg
+                                class="mt-0.5 h-6 w-6 shrink-0 text-shop-primary-600"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2"
                             >
-                                <input
-                                    v-model="paymentMethod"
-                                    type="radio"
-                                    name="payment"
-                                    value="cod"
-                                    class="mt-0.5 h-4 w-4 text-shop-primary-600 focus:ring-shop-primary-600"
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2h2m2-6h10a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6a2 2 0 012-2zm7 5a2 2 0 11-4 0 2 2 0 014 0z"
                                 />
-                                <span class="flex-1">
-                                    <span
-                                        class="flex items-center justify-between"
-                                    >
-                                        <span
-                                            class="text-sm font-semibold text-gray-900"
-                                            >Cash on Delivery</span
-                                        >
-                                        <svg
-                                            class="h-6 w-6 text-shop-primary-600"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2h2m2-6h10a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6a2 2 0 012-2zm7 5a2 2 0 11-4 0 2 2 0 014 0z"
-                                            />
-                                        </svg>
-                                    </span>
-                                    <span
-                                        class="mt-1 block text-sm text-gray-500"
-                                    >
-                                        Pay with cash when your order arrives.
-                                    </span>
-                                </span>
-                            </label>
-
-                            <label
-                                class="flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition"
-                                :class="
-                                    paymentMethod === 'sslcommerz'
-                                        ? 'border-shop-primary-600 bg-shop-primary-50'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                "
-                            >
-                                <input
-                                    v-model="paymentMethod"
-                                    type="radio"
-                                    name="payment"
-                                    value="sslcommerz"
-                                    class="mt-0.5 h-4 w-4 text-shop-primary-600 focus:ring-shop-primary-600"
-                                />
-                                <span class="flex-1">
-                                    <span
-                                        class="flex items-center justify-between"
-                                    >
-                                        <span
-                                            class="text-sm font-semibold text-gray-900"
-                                            >Pay Online (SSLCommerz)</span
-                                        >
-                                        <svg
-                                            class="h-6 w-6 text-gray-400"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                            stroke-width="2"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                                            />
-                                        </svg>
-                                    </span>
-                                    <span
-                                        class="mt-1 block text-sm text-gray-500"
-                                    >
-                                        Card, bKash, Nagad, Rocket & more via
-                                        secure gateway.
-                                    </span>
-                                    <span class="mt-2 flex flex-wrap gap-1.5">
-                                        <span
-                                            class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600"
-                                            >VISA</span
-                                        >
-                                        <span
-                                            class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600"
-                                            >Mastercard</span
-                                        >
-                                        <span
-                                            class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600"
-                                            >bKash</span
-                                        >
-                                        <span
-                                            class="rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600"
-                                            >Nagad</span
-                                        >
-                                    </span>
-                                </span>
-                            </label>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">
+                                    Cash on Delivery
+                                </p>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    No online payment required. Pay the delivery
+                                    agent in cash when you receive your order.
+                                </p>
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -569,10 +383,10 @@ function handleSubmit(event: Event): void {
                             :subtotal="cartSubtotal"
                             :delivery-charge="deliveryCharge"
                             :delivery-note="deliveryNote"
-                            :payment-method="paymentMethod"
                             :is-empty="cart.length === 0"
-                            @increment="incrementQty"
-                            @decrement="decrementQty"
+                            :processing="form.processing"
+                            @increment="handleIncrement"
+                            @decrement="handleDecrement"
                             @remove="handleRemove"
                         />
                     </div>

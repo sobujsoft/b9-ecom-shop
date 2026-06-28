@@ -13,6 +13,10 @@ class OrderSuccessController extends Controller
      */
     public function __invoke(): Response
     {
-        return Inertia::render('shop/OrderSuccess');
+        $order = session('order');
+
+        return Inertia::render('shop/OrderSuccess', [
+            'order' => $order,
+        ]);
     }
 }

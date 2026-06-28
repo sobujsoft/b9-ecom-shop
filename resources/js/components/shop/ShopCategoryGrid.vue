@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { categories } from '@/data/shop/static';
+import shop from '@/routes/shop';
+import type { ShopCategory } from '@/types/shop';
+
+defineProps<{
+    categories: ShopCategory[];
+}>();
 </script>
 
 <template>
@@ -15,7 +20,7 @@ import { categories } from '@/data/shop/static';
                     </p>
                 </div>
                 <a
-                    href="#"
+                    :href="shop.index()"
                     class="hidden items-center gap-1 text-sm font-medium text-shop-primary-600 hover:text-shop-primary-700 sm:inline-flex"
                 >
                     All categories

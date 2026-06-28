@@ -4,15 +4,14 @@ import { formatTaka } from '@/lib/shop/currency';
 import { productShowUrl } from '@/lib/shop/product';
 import type { ShopCartItem } from '@/types/shop';
 
-const { item, index } = defineProps<{
+const { item } = defineProps<{
     item: ShopCartItem;
-    index: number;
 }>();
 
 const emit = defineEmits<{
-    increment: [index: number];
-    decrement: [index: number];
-    remove: [index: number];
+    increment: [productId: number];
+    decrement: [productId: number];
+    remove: [productId: number];
 }>();
 
 const imgUrl = `https://images.unsplash.com/${item.img}?auto=format&fit=crop&w=160&q=70`;
@@ -44,7 +43,7 @@ const productHref = productShowUrl(item);
                 <button
                     type="button"
                     class="mt-1 inline-flex items-center gap-1 text-xs text-gray-400 transition hover:text-red-600"
-                    @click="emit('remove', index)"
+                    @click="emit('remove', item.productId)"
                 >
                     <svg
                         class="h-3.5 w-3.5"
@@ -76,7 +75,7 @@ const productHref = productShowUrl(item);
                     :aria-label="`Decrease quantity of ${item.name}`"
                     class="inline-flex h-9 w-9 items-center justify-center rounded-l-lg text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none disabled:opacity-40"
                     :disabled="item.qty <= 1"
-                    @click="emit('decrement', index)"
+                    @click="emit('decrement', item.productId)"
                 >
                     <svg
                         class="h-4 w-4"
@@ -100,7 +99,7 @@ const productHref = productShowUrl(item);
                     type="button"
                     :aria-label="`Increase quantity of ${item.name}`"
                     class="inline-flex h-9 w-9 items-center justify-center rounded-r-lg text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
-                    @click="emit('increment', index)"
+                    @click="emit('increment', item.productId)"
                 >
                     <svg
                         class="h-4 w-4"

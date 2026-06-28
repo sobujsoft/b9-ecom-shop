@@ -10,16 +10,16 @@ const { product } = defineProps<{
 
 const quantity = defineModel<number>('quantity', { default: 1 });
 
-const { addToCart } = useShopCart();
+const { addToCart, buyNow } = useShopCart();
 const { showToast } = useShopUi();
 
 function handleAddToCart(): void {
-    addToCart(product.name, product.price, product.img, quantity.value);
+    addToCart(product.id, quantity.value);
     showToast('Added to cart');
 }
 
 function handleBuyNow(): void {
-    addToCart(product.name, product.price, product.img, quantity.value);
+    buyNow(product.id, quantity.value);
 }
 </script>
 

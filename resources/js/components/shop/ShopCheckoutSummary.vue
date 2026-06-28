@@ -8,21 +8,21 @@ const {
     subtotal,
     deliveryCharge,
     deliveryNote,
-    paymentMethod,
     isEmpty,
+    processing = false,
 } = defineProps<{
     items: ShopCartItem[];
     subtotal: number;
     deliveryCharge: number;
     deliveryNote: string;
-    paymentMethod: 'cod' | 'sslcommerz';
     isEmpty: boolean;
+    processing?: boolean;
 }>();
 
 const emit = defineEmits<{
-    increment: [index: number];
-    decrement: [index: number];
-    remove: [index: number];
+    increment: [productId: number];
+    decrement: [productId: number];
+    remove: [productId: number];
 }>();
 
 const isSummaryOpen = ref(false);
@@ -32,10 +32,6 @@ const itemCount = computed(() =>
 );
 
 const grandTotal = computed(() => subtotal + deliveryCharge);
-
-const submitLabel = computed(() =>
-    paymentMethod === 'sslcommerz' ? 'Proceed to Payment' : 'Place Order',
-);
 
 function toggleSummary(): void {
     if (window.innerWidth >= 1024) {
@@ -96,9 +92,9 @@ function imgUrl(img: string): string {
                     Your cart is empty.
                 </li>
                 <li
-                    v-for="(item, index) in items"
+                    v-for="item in items"
                     v-else
-                    :key="`${item.name}-${index}`"
+                    :key="item.productId"
                     class="flex gap-3 py-4"
                 >
                     <div
@@ -121,7 +117,7 @@ function imgUrl(img: string): string {
                                 type="button"
                                 :aria-label="`Remove ${item.name}`"
                                 class="shrink-0 rounded text-gray-300 transition hover:text-red-600 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
-                                @click="emit('remove', index)"
+                                @click="emit('remove', item.productId)"
                             >
                                 <svg
                                     class="h-4 w-4"
@@ -150,7 +146,7 @@ function imgUrl(img: string): string {
                                     :aria-label="`Decrease quantity of ${item.name}`"
                                     class="inline-flex h-8 w-8 items-center justify-center rounded-l-lg text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none disabled:opacity-40 disabled:hover:bg-transparent"
                                     :disabled="item.qty <= 1"
-                                    @click="emit('decrement', index)"
+                                    @click="emit('decrement', item.productId)"
                                 >
                                     <svg
                                         class="h-4 w-4"
@@ -174,7 +170,7 @@ function imgUrl(img: string): string {
                                     type="button"
                                     :aria-label="`Increase quantity of ${item.name}`"
                                     class="inline-flex h-8 w-8 items-center justify-center rounded-r-lg text-gray-600 hover:bg-gray-100 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
-                                    @click="emit('increment', index)"
+                                    @click="emit('increment', item.productId)"
                                 >
                                     <svg
                                         class="h-4 w-4"
@@ -233,9 +229,9 @@ function imgUrl(img: string): string {
                 <button
                     type="submit"
                     class="w-full rounded-lg bg-shop-primary-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-shop-primary-700 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                    :disabled="isEmpty"
+                    :disabled="isEmpty || processing"
                 >
-                    {{ submitLabel }}
+                    {{ processing ? 'Placing order…' : 'Place Order' }}
                 </button>
                 <p
                     class="mt-3 flex items-center justify-center gap-1.5 text-xs text-gray-400"

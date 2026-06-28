@@ -5,14 +5,13 @@ import { formatTaka } from '@/lib/shop/currency';
 import { productShowUrl } from '@/lib/shop/product';
 import type { ShopWishlistItem } from '@/types/shop';
 
-const { item, index } = defineProps<{
+const { item } = defineProps<{
     item: ShopWishlistItem;
-    index: number;
 }>();
 
 const emit = defineEmits<{
-    remove: [index: number];
-    addToCart: [index: number];
+    remove: [productId: number];
+    addToCart: [productId: number];
 }>();
 
 const imgUrl = `https://images.unsplash.com/${item.img}?auto=format&fit=crop&w=600&q=70`;
@@ -56,7 +55,7 @@ const imgUrl = `https://images.unsplash.com/${item.img}?auto=format&fit=crop&w=6
                 type="button"
                 :aria-label="`Remove ${item.name} from wishlist`"
                 class="absolute top-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-sm transition duration-200 hover:scale-110 hover:bg-white active:scale-95 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
-                @click="emit('remove', index)"
+                @click="emit('remove', item.id)"
             >
                 <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                     <path
@@ -93,7 +92,7 @@ const imgUrl = `https://images.unsplash.com/${item.img}?auto=format&fit=crop&w=6
                     v-if="item.inStock"
                     type="button"
                     class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-shop-primary-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-shop-primary-700 focus:ring-2 focus:ring-shop-primary-600 focus:outline-none"
-                    @click="emit('addToCart', index)"
+                    @click="emit('addToCart', item.id)"
                 >
                     <svg
                         class="h-4 w-4"

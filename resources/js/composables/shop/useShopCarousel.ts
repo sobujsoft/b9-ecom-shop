@@ -7,6 +7,10 @@ export function useShopCarousel(slideCount: number) {
     let autoTimer: ReturnType<typeof setInterval> | undefined;
 
     function goTo(index: number): void {
+        if (slideCount === 0) {
+            return;
+        }
+
         current.value = (index + slideCount) % slideCount;
     }
 
@@ -51,7 +55,9 @@ export function useShopCarousel(slideCount: number) {
     }
 
     onMounted(() => {
-        startAuto();
+        if (slideCount > 0) {
+            startAuto();
+        }
     });
 
     onUnmounted(() => {

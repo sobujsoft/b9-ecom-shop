@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { carouselSlides } from '@/data/shop/static';
 import { useShopCarousel } from '@/composables/shop/useShopCarousel';
+import type { ShopCarouselSlide } from '@/types/shop';
+
+const { slides } = defineProps<{
+    slides: ShopCarouselSlide[];
+}>();
 
 const {
     current,
@@ -12,7 +16,7 @@ const {
     stopAuto,
     handleTouchStart,
     handleTouchEnd,
-} = useShopCarousel(carouselSlides.length);
+} = useShopCarousel(slides.length);
 
 const touchStartX = ref(0);
 
@@ -27,6 +31,7 @@ function onTouchEnd(event: TouchEvent): void {
 
 <template>
     <section
+        v-if="slides.length > 0"
         class="relative"
         aria-roledescription="carousel"
         aria-label="Featured promotions"
@@ -39,13 +44,13 @@ function onTouchEnd(event: TouchEvent): void {
             @touchend.passive="onTouchEnd"
         >
             <div
-                v-for="(slide, index) in carouselSlides"
+                v-for="(slide, index) in slides"
                 :key="index"
                 class="shop-slide absolute inset-0"
                 :class="{ active: current === index }"
                 role="group"
                 aria-roledescription="slide"
-                :aria-label="`${index + 1} of ${carouselSlides.length}`"
+                :aria-label="`${index + 1} of ${slides.length}`"
             >
                 <img
                     :src="slide.src"
@@ -105,7 +110,7 @@ function onTouchEnd(event: TouchEvent): void {
                 class="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2"
             >
                 <button
-                    v-for="(_, index) in carouselSlides"
+                    v-for="(_, index) in slides"
                     :key="index"
                     type="button"
                     :aria-label="`Go to slide ${index + 1}`"

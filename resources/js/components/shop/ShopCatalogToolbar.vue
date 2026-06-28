@@ -2,7 +2,7 @@
 import { useShopCatalog } from '@/composables/shop/useShopCatalog';
 import type { ShopSortOption } from '@/types/shop';
 
-const { filteredProducts, sort, openFilterDrawer, setSort } = useShopCatalog();
+const { total, sort, openFilterDrawer, setSort } = useShopCatalog();
 
 function handleSortChange(event: Event): void {
     setSort((event.target as HTMLSelectElement).value as ShopSortOption);
@@ -12,9 +12,7 @@ function handleSortChange(event: Event): void {
 <template>
     <div class="mb-5 flex items-center justify-between gap-3">
         <p class="text-sm text-gray-600">
-            <span class="font-semibold text-gray-900">{{
-                filteredProducts.length
-            }}</span>
+            <span class="font-semibold text-gray-900">{{ total }}</span>
             products
         </p>
         <div class="flex items-center gap-2">

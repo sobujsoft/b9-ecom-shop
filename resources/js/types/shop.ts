@@ -1,4 +1,5 @@
 export type ShopProduct = {
+    id?: number;
     name: string;
     slug?: string;
     price: number;
@@ -44,6 +45,7 @@ export type ShopReview = {
 };
 
 export type ShopProductDetail = ShopProduct & {
+    id: number;
     slug: string;
     category: string;
     categoryHref: string;
@@ -53,6 +55,27 @@ export type ShopProductDetail = ShopProduct & {
     images: ShopProductImage[];
     ratingBreakdown: ShopRatingBreakdown[];
     reviewList: ShopReview[];
+};
+
+export type ShopCategoryFilter = {
+    name: string;
+    slug: string;
+};
+
+export type ShopFilters = {
+    categories: string[];
+    price: string;
+    inStock: boolean;
+    sort: string;
+    search: string;
+    page: number;
+};
+
+export type ShopPaginationMeta = {
+    total: number;
+    perPage: number;
+    currentPage: number;
+    lastPage: number;
 };
 
 export type ShopCategory = {
@@ -67,17 +90,38 @@ export type ShopCarouselSlide = {
 };
 
 export type ShopCartItem = {
+    productId: number;
     name: string;
-    slug?: string;
+    slug: string;
     price: number;
     img: string;
     qty: number;
+    inStock: boolean;
 };
 
-export type ShopWishlistItem = ShopProduct;
+export type ShopCart = {
+    qty: number;
+    items: ShopCartItem[];
+};
+
+export type ShopWishlistItem = ShopProduct & {
+    id: number;
+};
+
+export type ShopWishlist = {
+    count: number;
+    productIds: number[];
+    items: ShopWishlistItem[];
+};
 
 export type ShopPlacedOrder = {
     orderNumber: string;
-    total: string;
+    total: number;
     paymentLabel: string;
+};
+
+export type ShopCheckoutConfig = {
+    insideDhaka: number;
+    outsideDhaka: number;
+    dhakaDistrict: string;
 };
