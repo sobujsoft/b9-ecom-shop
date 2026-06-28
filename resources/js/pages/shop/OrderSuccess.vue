@@ -2,10 +2,13 @@
 import { Head, Link } from '@inertiajs/vue3';
 import ShopOrderConfirmation from '@/components/shop/ShopOrderConfirmation.vue';
 import ShopPageBreadcrumb from '@/components/shop/ShopPageBreadcrumb.vue';
-import { useShopOrder } from '@/composables/shop/useShopOrder';
+import { formatTaka } from '@/lib/shop/currency';
+import type { ShopPlacedOrder } from '@/types/shop';
 import shop from '@/routes/shop';
 
-const { lastOrder } = useShopOrder();
+const { order } = defineProps<{
+    order: ShopPlacedOrder | null;
+}>();
 </script>
 
 <template>
@@ -31,10 +34,10 @@ const { lastOrder } = useShopOrder();
             <ShopPageBreadcrumb :items="[{ label: 'Order Confirmed' }]" />
 
             <ShopOrderConfirmation
-                v-if="lastOrder"
-                :order-number="lastOrder.orderNumber"
-                :total="lastOrder.total"
-                :payment-label="lastOrder.paymentLabel"
+                v-if="order"
+                :order-number="order.orderNumber"
+                :total="formatTaka(order.total)"
+                :payment-label="order.paymentLabel"
             />
 
             <div

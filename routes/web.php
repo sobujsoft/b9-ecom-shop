@@ -21,7 +21,8 @@ Route::delete('/cart', [CartController::class, 'clear'])->name('shop.cart.clear'
 Route::delete('/cart/{productId}', [CartController::class, 'destroy'])->name('shop.cart.destroy');
 
 Route::get('/wishlist', WishlistController::class)->name('shop.wishlist');
-Route::get('/checkout', CheckoutController::class)->name('shop.checkout');
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('shop.checkout');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('shop.checkout.store');
 Route::get('/orders/success', OrderSuccessController::class)->name('shop.orders.success');
 
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -108,6 +108,12 @@ export type ShopWishlistItem = ShopProduct;
 
 export type ShopPlacedOrder = {
     orderNumber: string;
-    total: string;
+    total: number;
     paymentLabel: string;
+};
+
+export type ShopCheckoutConfig = {
+    insideDhaka: number;
+    outsideDhaka: number;
+    dhakaDistrict: string;
 };
