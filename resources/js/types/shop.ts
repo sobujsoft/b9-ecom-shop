@@ -55,6 +55,27 @@ export type ShopProductDetail = ShopProduct & {
     reviewList: ShopReview[];
 };
 
+export type ShopCategoryFilter = {
+    name: string;
+    slug: string;
+};
+
+export type ShopFilters = {
+    categories: string[];
+    price: string;
+    inStock: boolean;
+    sort: string;
+    search: string;
+    page: number;
+};
+
+export type ShopPaginationMeta = {
+    total: number;
+    perPage: number;
+    currentPage: number;
+    lastPage: number;
+};
+
 export type ShopCategory = {
     name: string;
     img: string;

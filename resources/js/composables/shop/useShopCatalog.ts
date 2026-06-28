@@ -1,173 +1,177 @@
 import { computed, ref } from 'vue';
-import { catalogProducts, shopPriceRanges } from '@/data/shop/catalog';
+import { router, usePage } from '@inertiajs/vue3';
+import { shopPriceRanges } from '@/data/shop/catalog';
 import type {
     ShopCatalogProduct,
+    ShopCategoryFilter,
+    ShopFilters,
+    ShopPaginationMeta,
     ShopPriceRange,
     ShopSortOption,
 } from '@/types/shop';
 
-const PAGE_SIZE = 8;
+// ─── Module-level singletons (shared across all components) ───────────────────
 
-const category = ref<string>('all');
-const priceRange = ref<ShopPriceRange>('all');
-const inStockOnly = ref(false);
-const sort = ref<ShopSortOption>('newest');
-const search = ref('');
-const page = ref(1);
 const isFilterDrawerOpen = ref(false);
+const searchInput = ref('');
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
+let searchInitialized = false;
 
-function inPriceRange(price: number, range: ShopPriceRange): boolean {
-    if (range === 'all') {
-        return true;
+const DEFAULT_FILTERS: ShopFilters = {
+    categories: [],
+    price: 'all',
+    inStock: false,
+    sort: 'newest',
+    search: '',
+    page: 1,
+};
+
+function buildQueryParams(filters: ShopFilters): Record<string, unknown> {
+    const params: Record<string, unknown> = {};
+
+    if (filters.categories.length > 0) {
+        params.categories = filters.categories;
     }
 
-    const [min, max] = range.split('-');
-
-    if (price < Number(min)) {
-        return false;
+    if (filters.price !== 'all') {
+        params.price = filters.price;
     }
 
-    if (max !== '' && price > Number(max)) {
-        return false;
+    if (filters.inStock) {
+        params.in_stock = '1';
     }
 
-    return true;
+    if (filters.sort !== 'newest') {
+        params.sort = filters.sort;
+    }
+
+    if (filters.search.trim() !== '') {
+        params.search = filters.search.trim();
+    }
+
+    if (filters.page > 1) {
+        params.page = filters.page;
+    }
+
+    return params;
 }
 
-function sortProducts(list: ShopCatalogProduct[]): ShopCatalogProduct[] {
-    const sorted = [...list];
-
-    switch (sort.value) {
-        case 'price-asc':
-            sorted.sort((a, b) => a.price - b.price);
-            break;
-        case 'price-desc':
-            sorted.sort((a, b) => b.price - a.price);
-            break;
-        case 'best':
-            sorted.sort((a, b) => b.sold - a.sold);
-            break;
-        default:
-            sorted.sort((a, b) => b.id - a.id);
-    }
-
-    return sorted;
-}
+// ─── Composable ───────────────────────────────────────────────────────────────
 
 export function useShopCatalog() {
-    const filteredProducts = computed(() => {
-        const query = search.value.trim().toLowerCase();
+    const inertiaPage = usePage();
 
-        return sortProducts(
-            catalogProducts.filter(
-                (product) =>
-                    (category.value === 'all' ||
-                        product.category === category.value) &&
-                    inPriceRange(product.price, priceRange.value) &&
-                    (!inStockOnly.value || product.inStock) &&
-                    (query === '' ||
-                        product.name.toLowerCase().includes(query)),
-            ),
-        );
-    });
+    // ── Server props ────────────────────────────────────────────────────────
 
-    const totalPages = computed(() =>
-        Math.max(1, Math.ceil(filteredProducts.value.length / PAGE_SIZE)),
+    const products = computed(
+        () =>
+            (inertiaPage.props.products as ShopCatalogProduct[] | undefined) ??
+            [],
     );
 
-    const paginatedProducts = computed(() => {
-        const currentPage = Math.min(page.value, totalPages.value);
-        const start = (currentPage - 1) * PAGE_SIZE;
+    const categories = computed(
+        () =>
+            (inertiaPage.props.categories as
+                | ShopCategoryFilter[]
+                | undefined) ?? [],
+    );
 
-        return filteredProducts.value.slice(start, start + PAGE_SIZE);
-    });
+    const meta = computed(
+        (): ShopPaginationMeta =>
+            (inertiaPage.props.meta as ShopPaginationMeta | undefined) ?? {
+                total: 0,
+                perPage: 8,
+                currentPage: 1,
+                lastPage: 1,
+            },
+    );
 
-    const activeFilters = computed(() => {
-        const filters: Array<{ label: string; clear: () => void }> = [];
+    const serverFilters = computed(
+        (): ShopFilters =>
+            (inertiaPage.props.filters as ShopFilters | undefined) ??
+            DEFAULT_FILTERS,
+    );
 
-        if (category.value !== 'all') {
-            filters.push({
-                label: category.value,
-                clear: () => {
-                    category.value = 'all';
-                },
-            });
-        }
-
-        if (priceRange.value !== 'all') {
-            const priceLabel =
-                shopPriceRanges.find((r) => r.value === priceRange.value)
-                    ?.label ?? priceRange.value;
-
-            filters.push({
-                label: priceLabel,
-                clear: () => {
-                    priceRange.value = 'all';
-                },
-            });
-        }
-
-        if (inStockOnly.value) {
-            filters.push({
-                label: 'In Stock',
-                clear: () => {
-                    inStockOnly.value = false;
-                },
-            });
-        }
-
-        if (search.value.trim()) {
-            filters.push({
-                label: `“${search.value.trim()}”`,
-                clear: () => {
-                    search.value = '';
-                },
-            });
-        }
-
-        return filters;
-    });
-
-    function resetPage(): void {
-        page.value = 1;
+    // Initialise search input from server on first composable access
+    if (!searchInitialized && inertiaPage.props.filters) {
+        searchInitialized = true;
+        const sf = inertiaPage.props.filters as ShopFilters;
+        searchInput.value = sf.search ?? '';
     }
 
-    function setCategory(value: string): void {
-        category.value = value;
-        resetPage();
+    // ── Derived state ───────────────────────────────────────────────────────
+
+    const selectedCategories = computed(() => serverFilters.value.categories);
+    const priceRange = computed(
+        () => serverFilters.value.price as ShopPriceRange,
+    );
+    const inStockOnly = computed(() => serverFilters.value.inStock);
+    const sort = computed(() => serverFilters.value.sort as ShopSortOption);
+    const page = computed(() => meta.value.currentPage);
+    const totalPages = computed(() => meta.value.lastPage);
+    const total = computed(() => meta.value.total);
+    const hasActiveFilters = computed(
+        () =>
+            serverFilters.value.categories.length > 0 ||
+            serverFilters.value.price !== 'all' ||
+            serverFilters.value.inStock ||
+            serverFilters.value.search.trim() !== '',
+    );
+
+    // ── Actions ─────────────────────────────────────────────────────────────
+
+    function applyFilters(overrides: Partial<ShopFilters>): void {
+        const next: ShopFilters = { ...serverFilters.value, ...overrides };
+
+        router.get('/shop', buildQueryParams(next), {
+            preserveScroll: true,
+            replace: true,
+            only: ['products', 'meta', 'filters'],
+        });
+    }
+
+    function toggleCategory(slug: string): void {
+        const current = [...serverFilters.value.categories];
+        const idx = current.indexOf(slug);
+
+        if (idx === -1) {
+            current.push(slug);
+        } else {
+            current.splice(idx, 1);
+        }
+
+        applyFilters({ categories: current, page: 1 });
     }
 
     function setPriceRange(value: ShopPriceRange): void {
-        priceRange.value = value;
-        resetPage();
+        applyFilters({ price: value, page: 1 });
     }
 
     function setInStockOnly(value: boolean): void {
-        inStockOnly.value = value;
-        resetPage();
+        applyFilters({ inStock: value, page: 1 });
     }
 
     function setSort(value: ShopSortOption): void {
-        sort.value = value;
-        resetPage();
+        applyFilters({ sort: value, page: 1 });
     }
 
     function setSearch(value: string): void {
-        search.value = value;
-        resetPage();
+        searchInput.value = value;
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            applyFilters({ search: value.trim(), page: 1 });
+        }, 400);
     }
 
     function setPage(value: number): void {
-        page.value = value;
+        applyFilters({ page: value });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function clearFilters(): void {
-        category.value = 'all';
-        priceRange.value = 'all';
-        inStockOnly.value = false;
-        search.value = '';
-        resetPage();
+        searchInput.value = '';
+        clearTimeout(searchTimer);
+        applyFilters(DEFAULT_FILTERS);
     }
 
     function openFilterDrawer(): void {
@@ -180,24 +184,78 @@ export function useShopCatalog() {
         document.body.style.overflow = '';
     }
 
+    const activeFilters = computed(() => {
+        const sf = serverFilters.value;
+        const chips: Array<{ label: string; clear: () => void }> = [];
+
+        sf.categories.forEach((slug) => {
+            const cat = categories.value.find((c) => c.slug === slug);
+            chips.push({
+                label: cat?.name ?? slug,
+                clear: () =>
+                    applyFilters({
+                        categories: sf.categories.filter((s) => s !== slug),
+                        page: 1,
+                    }),
+            });
+        });
+
+        if (sf.price !== 'all') {
+            const label =
+                shopPriceRanges.find((r) => r.value === sf.price)?.label ??
+                sf.price;
+            chips.push({
+                label,
+                clear: () => applyFilters({ price: 'all', page: 1 }),
+            });
+        }
+
+        if (sf.inStock) {
+            chips.push({
+                label: 'In Stock',
+                clear: () => applyFilters({ inStock: false, page: 1 }),
+            });
+        }
+
+        if (sf.search.trim() !== '') {
+            chips.push({
+                label: `"${sf.search.trim()}"`,
+                clear: () => {
+                    searchInput.value = '';
+                    applyFilters({ search: '', page: 1 });
+                },
+            });
+        }
+
+        return chips;
+    });
+
     function removeFilter(index: number): void {
         activeFilters.value[index]?.clear();
-        resetPage();
     }
 
     return {
-        category,
+        // Server data
+        products,
+        categories,
+        meta,
+        total,
+        // Filter state (from server)
+        selectedCategories,
         priceRange,
         inStockOnly,
         sort,
-        search,
+        // Search (local ref for responsive input)
+        search: searchInput,
+        // Pagination (from server meta)
         page,
-        isFilterDrawerOpen,
-        filteredProducts,
-        paginatedProducts,
         totalPages,
+        // UI state
+        isFilterDrawerOpen,
+        hasActiveFilters,
         activeFilters,
-        setCategory,
+        // Actions
+        toggleCategory,
         setPriceRange,
         setInStockOnly,
         setSort,
@@ -207,5 +265,6 @@ export function useShopCatalog() {
         openFilterDrawer,
         closeFilterDrawer,
         removeFilter,
+        applyFilters,
     };
 }

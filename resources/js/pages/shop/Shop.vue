@@ -8,7 +8,7 @@ import ShopProductCard from '@/components/shop/ShopProductCard.vue';
 import { useShopCatalog } from '@/composables/shop/useShopCatalog';
 import { home } from '@/routes';
 
-const { filteredProducts, paginatedProducts, clearFilters } = useShopCatalog();
+const { products, total, hasActiveFilters, clearFilters } = useShopCatalog();
 </script>
 
 <template>
@@ -54,6 +54,17 @@ const { filteredProducts, paginatedProducts, clearFilters } = useShopCatalog();
         </div>
     </div>
 
+    <div
+        v-if="total === 0 && !hasActiveFilters"
+        class="border-b border-amber-200 bg-amber-50 px-4 py-6 text-center text-sm text-amber-900"
+    >
+        Storefront data is not loaded yet. Run
+        <code class="rounded bg-white px-2 py-1 font-mono text-xs"
+            >php artisan db:seed</code
+        >
+        to populate the product catalog.
+    </div>
+
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div class="lg:grid lg:grid-cols-[260px_1fr] lg:gap-8">
             <ShopFilters />
@@ -63,11 +74,11 @@ const { filteredProducts, paginatedProducts, clearFilters } = useShopCatalog();
                 <ShopFilterChips />
 
                 <div
-                    v-if="filteredProducts.length > 0"
+                    v-if="products.length > 0"
                     class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6 lg:grid-cols-3 xl:grid-cols-4"
                 >
                     <ShopProductCard
-                        v-for="product in paginatedProducts"
+                        v-for="product in products"
                         :key="product.id"
                         :product="product"
                     />
@@ -101,6 +112,7 @@ const { filteredProducts, paginatedProducts, clearFilters } = useShopCatalog();
                         Try adjusting your filters or search.
                     </p>
                     <button
+                        v-if="hasActiveFilters"
                         type="button"
                         class="mt-4 rounded-lg bg-shop-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-shop-primary-700"
                         @click="clearFilters"

@@ -1,28 +1,23 @@
 <script setup lang="ts">
-import { shopCategories, shopPriceRanges } from '@/data/shop/catalog';
+import { shopPriceRanges } from '@/data/shop/catalog';
 import { useShopCatalog } from '@/composables/shop/useShopCatalog';
 import type { ShopPriceRange } from '@/types/shop';
 
 const {
-    category,
+    categories,
+    selectedCategories,
     priceRange,
     inStockOnly,
     isFilterDrawerOpen,
-    setCategory,
+    toggleCategory,
     setPriceRange,
     setInStockOnly,
     clearFilters,
     closeFilterDrawer,
 } = useShopCatalog();
 
-function handleCategoryChange(event: Event): void {
-    setCategory((event.target as HTMLInputElement).value);
-}
-
 function handlePriceChange(event: Event): void {
-    setPriceRange(
-        (event.target as HTMLInputElement).value as ShopPriceRange,
-    );
+    setPriceRange((event.target as HTMLInputElement).value as ShopPriceRange);
 }
 
 function handleInStockChange(event: Event): void {
@@ -69,32 +64,30 @@ function handleInStockChange(event: Event): void {
             </div>
 
             <div class="space-y-6 lg:sticky lg:top-24">
+                <!-- Category (multi-select checkboxes) -->
                 <div class="rounded-xl border border-gray-200 p-4">
                     <h3 class="mb-3 text-sm font-semibold text-gray-900">
                         Category
                     </h3>
                     <div class="space-y-1.5 text-sm">
                         <label
-                            v-for="cat in shopCategories"
-                            :key="cat"
+                            v-for="cat in categories"
+                            :key="cat.slug"
                             class="flex cursor-pointer items-center gap-2.5 rounded-md px-1 py-1 hover:bg-gray-50"
                         >
                             <input
-                                type="radio"
-                                name="category"
-                                :value="cat === 'All Categories' ? 'all' : cat"
-                                :checked="
-                                    category ===
-                                    (cat === 'All Categories' ? 'all' : cat)
-                                "
-                                class="h-4 w-4 text-shop-primary-600 focus:ring-shop-primary-600"
-                                @change="handleCategoryChange"
+                                type="checkbox"
+                                :value="cat.slug"
+                                :checked="selectedCategories.includes(cat.slug)"
+                                class="h-4 w-4 rounded text-shop-primary-600 focus:ring-shop-primary-600"
+                                @change="toggleCategory(cat.slug)"
                             />
-                            <span class="text-gray-600">{{ cat }}</span>
+                            <span class="text-gray-600">{{ cat.name }}</span>
                         </label>
                     </div>
                 </div>
 
+                <!-- Price Range (radio — single select) -->
                 <div class="rounded-xl border border-gray-200 p-4">
                     <h3 class="mb-3 text-sm font-semibold text-gray-900">
                         Price Range
@@ -118,6 +111,7 @@ function handleInStockChange(event: Event): void {
                     </div>
                 </div>
 
+                <!-- Availability -->
                 <div class="rounded-xl border border-gray-200 p-4">
                     <h3 class="mb-3 text-sm font-semibold text-gray-900">
                         Availability
