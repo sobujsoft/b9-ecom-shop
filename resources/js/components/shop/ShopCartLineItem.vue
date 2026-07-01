@@ -14,7 +14,6 @@ const emit = defineEmits<{
     remove: [productId: number];
 }>();
 
-const imgUrl = `https://images.unsplash.com/${item.img}?auto=format&fit=crop&w=160&q=70`;
 const productHref = productShowUrl(item);
 </script>
 
@@ -28,7 +27,7 @@ const productHref = productShowUrl(item);
                 class="h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100"
             >
                 <img
-                    :src="imgUrl"
+                    :src="item.img"
                     :alt="item.name"
                     class="h-full w-full object-cover"
                 />

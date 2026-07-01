@@ -16,6 +16,10 @@ class CartService
      */
     private Cart|false|null $resolvedCart = null;
 
+    public function __construct(
+        private readonly ProductImageService $productImageService,
+    ) {}
+
     // ─── Cart resolution ──────────────────────────────────────────────────────
 
     /**
@@ -107,7 +111,7 @@ class CartService
                 'name' => $item->product->name,
                 'slug' => $item->product->slug,
                 'price' => (float) $item->product->price,
-                'img' => $item->product->images->first()?->image_path ?? '',
+                'img' => $this->productImageService->resolveUrl($item->product->images->first()?->image_path) ?? '',
                 'qty' => $item->quantity,
                 'inStock' => $item->product->stock_status === 'in_stock',
             ])

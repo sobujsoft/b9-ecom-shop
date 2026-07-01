@@ -20,7 +20,6 @@ const isWishlisted = computed(() =>
     product.id ? checkWishlisted(product.id) : false,
 );
 
-const imgUrl = `https://images.unsplash.com/${product.img}?auto=format&fit=crop&w=600&q=70`;
 const fullStars = Math.floor(product.rating);
 
 function handleToggleWish(): void {
@@ -50,7 +49,7 @@ function handleBuyNow(): void {
                 class="block h-full w-full"
             >
                 <img
-                    :src="imgUrl"
+                    :src="product.img"
                     :alt="product.name"
                     loading="lazy"
                     class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-110"

@@ -50,7 +50,7 @@ export type ShopProductDetail = ShopProduct & {
     category: string;
     categoryHref: string;
     summary: string;
-    description: string[];
+    description: string;
     features: string[];
     images: ShopProductImage[];
     ratingBreakdown: ShopRatingBreakdown[];
