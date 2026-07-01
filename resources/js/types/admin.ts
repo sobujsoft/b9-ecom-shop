@@ -96,3 +96,83 @@ export type ProductFormData = {
     sold_count: number;
     images: ProductImageFormItem[];
 };
+
+export type OrderStatus =
+    | 'pending'
+    | 'processing'
+    | 'shipped'
+    | 'delivered'
+    | 'cancelled';
+
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'cancelled';
+
+export type PaymentMethod = 'cod' | 'sslcommerz';
+
+export type AdminStatusOption = {
+    value: string;
+    label: string;
+};
+
+export type AdminOrderListItem = {
+    id: number;
+    order_number: string;
+    customer_name: string;
+    phone: string;
+    email: string;
+    total: number;
+    items_count: number;
+    payment_method: PaymentMethod;
+    payment_status: PaymentStatus;
+    status: OrderStatus;
+    placed_at: string | null;
+    created_at: string;
+};
+
+export type AdminOrderItem = {
+    id: number;
+    product_id: number | null;
+    product_name: string;
+    unit_price: number;
+    quantity: number;
+    line_total: number;
+};
+
+export type AdminOrderStatusHistory = {
+    id: number;
+    status: OrderStatus;
+    note: string | null;
+    changed_by: {
+        id: number;
+        name: string;
+    } | null;
+    created_at: string;
+};
+
+export type AdminOrder = AdminOrderListItem & {
+    district: string;
+    area: string;
+    address: string;
+    notes: string | null;
+    subtotal: number;
+    delivery_charge: number;
+    customer: {
+        id: number;
+        name: string;
+        email: string;
+    } | null;
+    items: AdminOrderItem[];
+    status_histories: AdminOrderStatusHistory[];
+    updated_at: string;
+};
+
+export type AdminOrderFilters = {
+    search: string;
+    status: string;
+    payment_status: string;
+};
+
+export type OrderUpdateFormData = {
+    status: OrderStatus;
+    payment_status: PaymentStatus;
+    note: string;
+};
