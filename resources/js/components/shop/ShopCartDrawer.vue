@@ -103,7 +103,7 @@ const {
                             class="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100"
                         >
                             <img
-                                :src="`https://images.unsplash.com/${item.img}?auto=format&fit=crop&w=120&q=70`"
+                                :src="item.img"
                                 :alt="item.name"
                                 class="h-full w-full object-cover"
                             />

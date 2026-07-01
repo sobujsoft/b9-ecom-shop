@@ -40,10 +40,6 @@ function toggleSummary(): void {
 
     isSummaryOpen.value = !isSummaryOpen.value;
 }
-
-function imgUrl(img: string): string {
-    return `https://images.unsplash.com/${img}?auto=format&fit=crop&w=120&q=70`;
-}
 </script>
 
 <template>
@@ -101,7 +97,7 @@ function imgUrl(img: string): string {
                         class="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100"
                     >
                         <img
-                            :src="imgUrl(item.img)"
+                            :src="item.img"
                             :alt="item.name"
                             class="h-full w-full object-cover"
                         />

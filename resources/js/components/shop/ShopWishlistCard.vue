@@ -13,8 +13,6 @@ const emit = defineEmits<{
     remove: [productId: number];
     addToCart: [productId: number];
 }>();
-
-const imgUrl = `https://images.unsplash.com/${item.img}?auto=format&fit=crop&w=600&q=70`;
 </script>
 
 <template>
@@ -28,7 +26,7 @@ const imgUrl = `https://images.unsplash.com/${item.img}?auto=format&fit=crop&w=6
                 class="block h-full w-full"
             >
                 <img
-                    :src="imgUrl"
+                    :src="item.img"
                     :alt="item.name"
                     loading="lazy"
                     class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-110"

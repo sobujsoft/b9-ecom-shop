@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\HeroSlide;
 use App\Models\Product;
 use App\Services\CategoryImageService;
+use App\Services\ProductImageService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -19,6 +20,7 @@ class HomeController extends Controller
 
     public function __construct(
         private readonly CategoryImageService $categoryImageService,
+        private readonly ProductImageService $productImageService,
     ) {}
 
     /**
@@ -132,7 +134,7 @@ class HomeController extends Controller
                 'oldPrice' => $product->compare_at_price !== null
                     ? (float) $product->compare_at_price
                     : null,
-                'img' => $primaryImage?->image_path ?? '',
+                'img' => $this->productImageService->resolveUrl($primaryImage?->image_path) ?? '',
                 'rating' => round((float) ($product->reviews_avg_rating ?? 0), 1),
                 'reviews' => (int) $product->reviews_count,
                 'inStock' => $product->stock_status === 'in_stock',

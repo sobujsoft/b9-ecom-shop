@@ -6,16 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Review;
+use App\Services\ProductImageService;
 use App\Support\RichTextSanitizer;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Response as HttpResponse;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProductController extends Controller
 {
     private const RELATED_PRODUCT_LIMIT = 4;
+
+    public function __construct(
+        private readonly ProductImageService $productImageService,
+    ) {}
 
     /**
      * Display the product details page.
@@ -81,7 +85,7 @@ class ProductController extends Controller
             'oldPrice' => $product->compare_at_price !== null
                 ? (float) $product->compare_at_price
                 : null,
-            'img' => $primaryImage?->image_path ?? '',
+            'img' => $this->productImageService->resolveUrl($primaryImage?->image_path) ?? '',
             'rating' => round((float) ($product->reviews_avg_rating ?? 0), 1),
             'reviews' => (int) $product->reviews_count,
             'inStock' => $product->stock_status === 'in_stock',
@@ -131,7 +135,7 @@ class ProductController extends Controller
                     'oldPrice' => $related->compare_at_price !== null
                         ? (float) $related->compare_at_price
                         : null,
-                    'img' => $primaryImage?->image_path ?? '',
+                    'img' => $this->productImageService->resolveUrl($primaryImage?->image_path) ?? '',
                     'rating' => round((float) ($related->reviews_avg_rating ?? 0), 1),
                     'reviews' => (int) $related->reviews_count,
                     'inStock' => $related->stock_status === 'in_stock',
@@ -166,8 +170,8 @@ class ProductController extends Controller
 
         return $images
             ->map(fn (ProductImage $image): array => [
-                'full' => $this->imageUrl($image->image_path, 900, 75),
-                'thumb' => $this->imageUrl($image->image_path, 200, 70),
+                'full' => $this->productImageService->resolveUrl($image->image_path, 900, 75) ?? '',
+                'thumb' => $this->productImageService->resolveUrl($image->image_path, 200, 70) ?? '',
             ])
             ->values()
             ->all();
@@ -208,14 +212,5 @@ class ProductController extends Controller
                 'text' => $review->comment ?? '',
             ])
             ->all();
-    }
-
-    private function imageUrl(string $path, int $width, int $quality = 75): string
-    {
-        if (Str::startsWith($path, ['http://', 'https://'])) {
-            return $path;
-        }
-
-        return "https://images.unsplash.com/{$path}?auto=format&fit=crop&w={$width}&q={$quality}";
     }
 }

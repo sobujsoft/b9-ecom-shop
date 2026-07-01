@@ -7,6 +7,10 @@ use App\Models\Wishlist;
 
 class WishlistService
 {
+    public function __construct(
+        private readonly ProductImageService $productImageService,
+    ) {}
+
     /**
      * Total saved items for the authenticated user.
      */
@@ -154,7 +158,7 @@ class WishlistService
             'oldPrice' => $product->compare_at_price !== null
                 ? (float) $product->compare_at_price
                 : null,
-            'img' => $primaryImage?->image_path ?? '',
+            'img' => $this->productImageService->resolveUrl($primaryImage?->image_path) ?? '',
             'rating' => round((float) ($product->reviews_avg_rating ?? 0), 1),
             'reviews' => (int) $product->reviews_count,
             'inStock' => $product->stock_status === 'in_stock',

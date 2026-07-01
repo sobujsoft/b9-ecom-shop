@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Product;
+use App\Models\ProductImage;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('product show page renders with inertia', function () {
@@ -54,4 +56,27 @@ test('product show page returns not found for inactive product', function () {
 
     $this->get(route('shop.products.show', 'wireless-noise-cancelling-headphones'))
         ->assertNotFound();
+});
+
+test('product show page resolves uploaded image paths to storage urls', function () {
+    Storage::fake('public');
+
+    $product = Product::factory()->create();
+    $imagePath = 'products/test-upload.jpg';
+    Storage::disk('public')->put($imagePath, 'fake-image');
+
+    ProductImage::query()
+        ->where('product_id', $product->id)
+        ->update(['image_path' => $imagePath]);
+
+    $expectedUrl = Storage::disk('public')->url($imagePath);
+
+    $this->get(route('shop.products.show', $product->slug))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('shop/ProductShow')
+            ->where('product.img', $expectedUrl)
+            ->where('product.images.0.full', $expectedUrl)
+            ->where('product.images.0.thumb', $expectedUrl)
+        );
 });

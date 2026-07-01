@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\ProductImageService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,6 +18,10 @@ class ShopController extends Controller
     private const VALID_SORTS = ['newest', 'price-asc', 'price-desc', 'best'];
 
     private const VALID_PRICE_RANGES = ['all', '0-1000', '1000-3000', '3000-6000', '6000-'];
+
+    public function __construct(
+        private readonly ProductImageService $productImageService,
+    ) {}
 
     /**
      * Display the storefront product catalog.
@@ -174,7 +179,7 @@ class ShopController extends Controller
             'oldPrice' => $product->compare_at_price !== null
                 ? (float) $product->compare_at_price
                 : null,
-            'img' => $primaryImage?->image_path ?? '',
+            'img' => $this->productImageService->resolveUrl($primaryImage?->image_path) ?? '',
             'rating' => round((float) ($product->reviews_avg_rating ?? 0), 1),
             'reviews' => (int) $product->reviews_count,
             'inStock' => $product->stock_status === 'in_stock',
