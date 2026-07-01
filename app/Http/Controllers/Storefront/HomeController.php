@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\HeroSlide;
 use App\Models\Product;
+use App\Services\CategoryImageService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -15,6 +16,10 @@ use Inertia\Response;
 class HomeController extends Controller
 {
     private const HOMEPAGE_PRODUCT_LIMIT = 4;
+
+    public function __construct(
+        private readonly CategoryImageService $categoryImageService,
+    ) {}
 
     /**
      * Display the storefront homepage.
@@ -62,7 +67,7 @@ class HomeController extends Controller
             ->get(['name', 'slug', 'image'])
             ->map(fn (Category $category): array => [
                 'name' => $category->name,
-                'img' => $category->image,
+                'img' => $this->categoryImageService->resolveUrl($category->image) ?? '',
                 'href' => route('shop.index', ['category' => $category->name]),
             ])
             ->all();
