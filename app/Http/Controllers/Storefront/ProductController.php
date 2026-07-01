@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Review;
+use App\Support\RichTextSanitizer;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Str;
@@ -58,7 +59,7 @@ class ProductController extends Controller
      *     inStock: bool,
      *     tag: string|null,
      *     summary: string,
-     *     description: list<string>,
+     *     description: string,
      *     features: list<string>,
      *     images: list<array{full: string, thumb: string}>,
      *     ratingBreakdown: list<array{stars: int, percent: int}>,
@@ -86,7 +87,7 @@ class ProductController extends Controller
             'inStock' => $product->stock_status === 'in_stock',
             'tag' => $this->productTag($product),
             'summary' => $product->short_description ?? '',
-            'description' => $this->descriptionParagraphs($product->description),
+            'description' => RichTextSanitizer::forDisplay($product->description),
             'features' => [],
             'images' => $this->mapImages($product->images),
             'ratingBreakdown' => $this->ratingBreakdown($product->reviews),
@@ -151,21 +152,6 @@ class ProductController extends Controller
         }
 
         return null;
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function descriptionParagraphs(?string $description): array
-    {
-        if ($description === null || trim($description) === '') {
-            return [];
-        }
-
-        return array_values(array_filter(
-            preg_split('/\R{2,}/', trim($description)) ?: [],
-            fn (string $paragraph): bool => trim($paragraph) !== '',
-        ));
     }
 
     /**

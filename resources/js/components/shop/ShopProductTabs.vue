@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import RichTextContent from '@/components/RichTextContent.vue';
 import ShopStarRating from '@/components/shop/ShopStarRating.vue';
 import { useShopUi } from '@/composables/shop/useShopUi';
 import type { ShopProductDetail } from '@/types/shop';
@@ -97,12 +98,10 @@ function submitReview(event: Event): void {
                 aria-labelledby="tab-desc"
                 class="pt-6"
             >
-                <div
-                    class="max-w-prose space-y-4 text-sm leading-relaxed text-gray-600 md:text-base"
-                >
-                    <p v-for="(paragraph, index) in product.description" :key="index">
-                        {{ paragraph }}
-                    </p>
+                <RichTextContent
+                    :html="product.description"
+                    class="max-w-prose text-gray-600 md:text-base"
+                />
                     <h3
                         v-if="product.features.length > 0"
                         class="pt-2 text-base font-semibold text-gray-900"
@@ -111,7 +110,7 @@ function submitReview(event: Event): void {
                     </h3>
                     <ul
                         v-if="product.features.length > 0"
-                        class="list-disc space-y-1.5 pl-5"
+                        class="list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-gray-600 md:text-base"
                     >
                         <li
                             v-for="(feature, index) in product.features"
@@ -120,7 +119,6 @@ function submitReview(event: Event): void {
                             {{ feature }}
                         </li>
                     </ul>
-                </div>
             </div>
 
             <div
